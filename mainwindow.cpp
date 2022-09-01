@@ -258,6 +258,7 @@ void MainWindow::on_deleteSelectionButton_clicked()
 {
     QModelIndex index = ui->fileSystemTreeView->currentIndex();
     if(!index.isValid()) return;
+    if(model->fileInfo(index).fileName() == "root") return;
     if(!model->fileInfo(index).isDir()){
         fs->deleteFile(model->fileInfo(index).fileName());
     }
