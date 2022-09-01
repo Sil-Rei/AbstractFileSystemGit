@@ -23,8 +23,8 @@ set(PROJECT_SOURCES
         disk.cpp
         statusTypes.h
         fatfilesystem.h fatfilesystem.cpp
-        filesystem.h filesystem.cpp
         inodefilesystem.h inodefilesystem.cpp
+        abstractfilesystem.h abstractfilesystem.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
