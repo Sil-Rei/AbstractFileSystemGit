@@ -1,11 +1,11 @@
 #ifndef INODEFILESYSTEM_H
 #define INODEFILESYSTEM_H
 #include <QString>
-#include "filesystem.h"
+#include "abstractfilesystem.h"
 #include "disk.h"
 #include <ctime>
 // based on ext2-fileSystem
-class inodefilesystem : public filesystem
+class inodefilesystem : public abstractFilesystem
 {
 public:
 

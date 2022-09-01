@@ -7,13 +7,13 @@
 #include <QPainter>
 #include "disk.h"
 #include "statusTypes.h"
-#include "filesystem.h"
+#include "abstractfilesystem.h"
 #include <math.h>
 #include <QFormLayout>
 #include <QMessageBox>
 
 Disk* disk;
-filesystem* fs;
+abstractFilesystem* fs;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
