@@ -5,10 +5,10 @@
 #ifndef BETRIEBSSYSTEME_FATFILESYSTEM_H
 #define BETRIEBSSYSTEME_FATFILESYSTEM_H
 #include "disk.h"
-#include "filesystem.h"
+#include "abstractfilesystem.h"
 #include <string>
 using namespace std;
-class fatFileSystem : public filesystem{
+class fatFileSystem : public abstractFilesystem{
 public:
 
     struct Node{
