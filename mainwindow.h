@@ -35,6 +35,8 @@ private slots:
 
     void on_defragButton_clicked();
 
+    void on_startUpButton_clicked();
+
 signals:
     void diskInformationChanged();
     void diskSpaceAltered();

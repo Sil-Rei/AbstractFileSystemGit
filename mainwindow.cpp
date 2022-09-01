@@ -293,3 +293,9 @@ void MainWindow::on_defragButton_clicked()
     emit diskSpaceAltered();
 }
 
+
+void MainWindow::on_startUpButton_clicked()
+{
+    emit diskSpaceAltered();
+}
+
