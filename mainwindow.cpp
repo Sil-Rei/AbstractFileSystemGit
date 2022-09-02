@@ -300,15 +300,44 @@ void MainWindow::on_createDirButton_clicked()
     emit diskSpaceAltered();
 }
 
+bool removeDir(const QString & dirName)
+{
+    bool result = true;
+    QDir dir(dirName);
+
+    if (dir.exists(dirName)) {
+        Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+            if (info.isDir()) {
+                result = removeDir(info.absoluteFilePath());
+            } else {
+                fs->deleteFile(info.fileName());
+                result = QFile::remove(info.absoluteFilePath());
+            }
+
+            if (!result) {
+                return result;
+            }
+        }
+        result = dir.rmdir(dirName);
+    }
+    return result;
+}
+
 void MainWindow::on_deleteSelectionButton_clicked()
 {
     QModelIndex index = ui->fileSystemTreeView->currentIndex();
     if(!index.isValid()) return;
     if(model->fileInfo(index).fileName() == "root") return;
-    if(!model->fileInfo(index).isDir()){
+    if(model->fileInfo(index).isDir()){
+        QString path = model->fileInfo(index).absoluteFilePath();
+        qDebug() << "Pfad: " << path;
+        removeDir(path);
+    }else{
         fs->deleteFile(model->fileInfo(index).fileName());
+        model->remove(index);
     }
-    model->remove(index);
+
+
     emit diskSpaceAltered();
 }
 
