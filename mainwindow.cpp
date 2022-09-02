@@ -43,6 +43,34 @@ MainWindow::MainWindow(QWidget *parent)
     ui->fileSystemTreeView->setModel(model);
     QModelIndex idx = model->index("FileSystem");
     ui->fileSystemTreeView->setRootIndex(idx);
+
+    // set rect icons for legend
+    QPixmap pixmapFree(20,20);
+    QPainter painterFree(&pixmapFree);
+    painterFree.setBrush(QBrush(Qt::green));
+    painterFree.drawRect(0,0,20,20);
+    ui->freeLegendIconLabel->setPixmap(pixmapFree);
+
+    QPixmap pixmapUsed(20,20);
+    QPainter painterUsed(&pixmapUsed);
+    painterUsed.setBrush(QBrush(Qt::yellow));
+    painterUsed.drawRect(0,0,20,20);
+    ui->usedLegendIconLabel->setPixmap(pixmapUsed);
+
+    QPixmap pixmapReserved(20,20);
+    QPainter painterReserved(&pixmapReserved);
+    painterReserved.setBrush(QBrush(Qt::blue));
+    painterReserved.drawRect(0,0,20,20);
+    ui->reservedLegendIconLabel->setPixmap(pixmapReserved);
+
+    QPixmap pixmapNotInit(20,20);
+    QPainter painterNotInit(&pixmapNotInit);
+    painterNotInit.setBrush(QBrush(Qt::gray));
+    painterNotInit.drawRect(0,0,20,20);
+    ui->notInitLegendIconLabel->setPixmap(pixmapNotInit);
+
+
+
 }
 
 MainWindow::~MainWindow()
@@ -268,15 +296,44 @@ void MainWindow::on_createDirButton_clicked()
     emit diskSpaceAltered();
 }
 
+bool removeDir(const QString & dirName)
+{
+    bool result = true;
+    QDir dir(dirName);
+
+    if (dir.exists(dirName)) {
+        Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+            if (info.isDir()) {
+                result = removeDir(info.absoluteFilePath());
+            } else {
+                fs->deleteFile(info.fileName());
+                result = QFile::remove(info.absoluteFilePath());
+            }
+
+            if (!result) {
+                return result;
+            }
+        }
+        result = dir.rmdir(dirName);
+    }
+    return result;
+}
+
 void MainWindow::on_deleteSelectionButton_clicked()
 {
     QModelIndex index = ui->fileSystemTreeView->currentIndex();
     if(!index.isValid()) return;
     if(model->fileInfo(index).fileName() == "root") return;
-    if(!model->fileInfo(index).isDir()){
+    if(model->fileInfo(index).isDir()){
+        QString path = model->fileInfo(index).absoluteFilePath();
+        qDebug() << "Pfad: " << path;
+        removeDir(path);
+    }else{
         fs->deleteFile(model->fileInfo(index).fileName());
+        model->remove(index);
     }
-    model->remove(index);
+
+
     emit diskSpaceAltered();
 }
 
