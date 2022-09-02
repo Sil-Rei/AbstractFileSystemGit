@@ -43,6 +43,38 @@ MainWindow::MainWindow(QWidget *parent)
     ui->fileSystemTreeView->setModel(model);
     QModelIndex idx = model->index("FileSystem");
     ui->fileSystemTreeView->setRootIndex(idx);
+
+    // set rect icons for legend
+    QPixmap pixmapFree(20,20);
+    QPainter painterFree(&pixmapFree);
+    ui->freeLegendIconLabel->setPixmap(pixmapFree);
+    painterFree.setBrush(QBrush(Qt::green));
+    painterFree.drawRect(0,0,20,20);
+    ui->usedLegendIconLabel->setPixmap(pixmapFree);
+
+    QPixmap pixmapUsed(20,20);
+    QPainter painterUsed(&pixmapUsed);
+    ui->freeLegendIconLabel->setPixmap(pixmapUsed);
+    painterUsed.setBrush(QBrush(Qt::yellow));
+    painterUsed.drawRect(0,0,20,20);
+    ui->usedLegendIconLabel->setPixmap(pixmapUsed);
+
+    QPixmap pixmapReserved(20,20);
+    QPainter painterReserved(&pixmapReserved);
+    ui->freeLegendIconLabel->setPixmap(pixmapReserved);
+    painterReserved.setBrush(QBrush(Qt::blue));
+    painterReserved.drawRect(0,0,20,20);
+    ui->reservedLegendIconLabel->setPixmap(pixmapReserved);
+
+    QPixmap pixmapNotInit(20,20);
+    QPainter painterNotInit(&pixmapNotInit);
+    ui->freeLegendIconLabel->setPixmap(pixmapNotInit);
+    painterNotInit.setBrush(QBrush(Qt::gray));
+    painterNotInit.drawRect(0,0,20,20);
+    ui->notInitLegendIconLabel->setPixmap(pixmapNotInit);
+
+
+
 }
 
 MainWindow::~MainWindow()
