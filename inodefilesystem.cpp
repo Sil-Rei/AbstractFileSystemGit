@@ -11,10 +11,9 @@ using namespace std;
 
 inodefilesystem::inodefilesystem(Disk* disk)
 {
-    map<QString,unsigned int> inodeTable;
+    map<QString,unsigned int> m_inodeTable;
     m_disk = disk;
-    //Set the
-    inodefilesystem::iNode* inodeArr = new inodefilesystem::iNode[disk->getAmountOfBlocks()-2]();
+    inodefilesystem::iNode* m_inodeArr = new inodefilesystem::iNode[disk->getAmountOfBlocks()-2]();
     m_iNumb = 0;
 
 }
@@ -30,12 +29,9 @@ inodefilesystem::iNode* inodefilesystem::createInode(QString author, unsigned in
     return placeholderINode;
 }
 
-// check if the files blocksize exceeds each of the PtrStorage
-// Add the file to the inode-Table and
 void inodefilesystem::createFile(int szFile, QString name, unsigned char systemFlag){
 
     int rndm;
-
 
     inodefilesystem::iNode *currentiNode = createInode("user", 132 , 2);
     currentiNode->fileName = name;
@@ -51,12 +47,16 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
         currentiNode->sizeFlag = 'a';
     } else if(blocksNeeded > 12 && blocksNeeded < 256) {
         currentiNode->sizeFlag = 'b';
-        currentiNode->singleptrs = new unsigned int[10000]();
+        currentiNode->singleptrs = new unsigned int[256]();
     } else if(blocksNeeded > 268 && blocksNeeded < 65536) {
         currentiNode->sizeFlag = 'c';
-        currentiNode->singleptrs = new unsigned int[100000]();
+        currentiNode->singleptrs = new unsigned int[256]();
+        currentiNode->doubleptrs = new unsigned int[1000]();
     } else if(blocksNeeded > 65536 && blocksNeeded < 16777216) {
         currentiNode->sizeFlag = 'd';
+        currentiNode->singleptrs = new unsigned int[256]();
+        currentiNode->doubleptrs = new unsigned int[1000]();
+        currentiNode->singleptrs = new unsigned int[100000]();
     };
     qDebug() << currentiNode->sizeFlag;
     switch(currentiNode->sizeFlag) {
@@ -147,20 +147,22 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
             }
             break;
         default:
-            std::cout << "hallo " << std::endl;
+            qDebug() << "error occured";
             break;
 
     };
 
-    inodefilesystem::inodeTable.insert(pair<QString, unsigned int>(currentiNode->fileName, currentiNode->iNumb));
-    //inodeArr[currentiNode->iNumb] = currentiNode;
+    //inodefilesystem::m_inodeTable.insert(pair<QString, unsigned int>(currentiNode->fileName, currentiNode->iNumb));
+    //inodefilesystem::addToInodeArr(currentiNode, currentiNode->iNumb);
+
+    //qDebug() << ""  << m_inodeArr[currentiNode->iNumb].fileName;
+
 };
 
 
 
 unsigned int* locateFile(inodefilesystem::iNode* inode, int blockSize) {
     unsigned int blocksInUse = ceil((double)inode->fileSize / blockSize);
-
     char sizeFlag = inode->sizeFlag;
     unsigned int *blockArray = new unsigned int[blocksInUse];
     switch(sizeFlag) {

@@ -28,7 +28,9 @@ public:
       iNode* referediNode;
 
     };
-
+    void addToInodeArr(iNode* x, int index) {
+        m_inodeArr[index] = *x;
+    };
     iNode* createInode(QString author, unsigned int fileSize, unsigned int ownerUID);
 
     unsigned int* locateFile(iNode* x);
@@ -42,9 +44,9 @@ public:
 
 private:
     Disk* m_disk;
-    map<QString, unsigned int> inodeTable;
+    map<QString, unsigned int> m_inodeTable;
     unsigned int m_iNumb;
-    iNode* inodeArr;
+    iNode* m_inodeArr;
 };
 
 #endif // INODEFILESYSTEM_H
