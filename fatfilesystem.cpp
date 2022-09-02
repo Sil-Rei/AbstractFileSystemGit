@@ -11,7 +11,7 @@
 #include <ctime>
 #include <iostream>
 #include <QDebug>
-
+#include <QMessageBox>
 
 using namespace std;
 
@@ -254,6 +254,55 @@ void fatFileSystem::defrag(){
 }
 
 bool fatFileSystem::checkName(QString fileName){
+    if(fileName.contains(".")){
+        if(fileName.size() > 12){
+            QMessageBox box;
+            box.setText("Filename ist nicht zwischen 1-8 Zeichen lang bzw. 1-12 mit optionaler Extension.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }else if(fileName.split(".")[1].size() > 3 || fileName.split(".")[1].size() < 1){
+            QMessageBox box;
+            box.setText("Filename ist nicht zwischen 1-8 Zeichen lang bzw. 1-12 mit optionaler Extension.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }else{
+        if(fileName.size() > 8 || fileName.size() < 1){
+            QMessageBox box;
+            box.setText("Filename ist nicht zwischen 1-8 Zeichen lang bzw. 1-12 mit optionaler Extension.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }
+    // Check if name is already in use
+    for(int i = 0; i < pFat->listOfFiles.count(); i++){
+        if(pFat->listOfFiles.at(i)->name == fileName){
+            QMessageBox box;
+            box.setText("Filename existiert bereits.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }
+
+    // Check if name contains forbidden chars
+    for(int i = 0; i < fileName.size(); i++){
+        if(!fileName[i].isLetterOrNumber() && fileName[i] != "_" && fileName[i] != "."){
+            QMessageBox box;
+            box.setText("Filename enthält unzulässige Zeichen.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }
 
     return true;
 }

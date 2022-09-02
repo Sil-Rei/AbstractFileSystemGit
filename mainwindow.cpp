@@ -206,13 +206,13 @@ void MainWindow::on_createFileButton_clicked()
 
     if (dialog.exec() == QDialog::Accepted) {
         QString fileName = fields.at(0)->text();
+        // if fs is fat, convert name to upper
+        if(dynamic_cast<inodefilesystem*>(fs) == nullptr){
+            fileName = fileName.toUpper();
+        }
         // Check for integrity
         if(!fs->checkName(fileName)){
-            QMessageBox box;
-            box.setText("Achten Sie auf einen gültigen Filenamen.");
-            box.setIcon(QMessageBox::Warning);
-            box.addButton("OK", QMessageBox::AcceptRole);
-            box.exec();
+
             return;
         }
         int fileSize = fields.at(1)->text().toInt();
@@ -293,7 +293,7 @@ void MainWindow::on_fileSystemTreeView_clicked(const QModelIndex &index)
     ui->sizeInfoLabel->setText(QString("Größe: %1").arg(fileSize));
 
     QString filePath = model->fileInfo(index).filePath();
-    filePath ="root/" + filePath.split("root")[1];
+    filePath ="root" + filePath.split("root")[1];
     ui->pathInfoLabel->setText(QString("Pfad: %1").arg(filePath));
 }
 
