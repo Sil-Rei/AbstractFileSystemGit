@@ -7,6 +7,7 @@
 #include "disk.h"
 #include "abstractfilesystem.h"
 #include <string>
+#include <QList>
 using namespace std;
 class fatFileSystem : public abstractFilesystem{
 public:
@@ -30,8 +31,7 @@ public:
         unsigned int amountOfBlocks;
         unsigned char* listOfStati;
 
-        unsigned int amountOfFiles;
-        struct BsFile** arrayOfFiles;
+        QList<BsFile*> listOfFiles;
     };
 
 

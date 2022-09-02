@@ -258,6 +258,7 @@ void MainWindow::on_deleteSelectionButton_clicked()
 {
     QModelIndex index = ui->fileSystemTreeView->currentIndex();
     if(!index.isValid()) return;
+    if(model->fileInfo(index).fileName() == "root") return;
     if(!model->fileInfo(index).isDir()){
         fs->deleteFile(model->fileInfo(index).fileName());
     }
@@ -289,6 +290,12 @@ void MainWindow::on_fileSystemTreeView_clicked(const QModelIndex &index)
 void MainWindow::on_defragButton_clicked()
 {
     fs->defrag();
+    emit diskSpaceAltered();
+}
+
+
+void MainWindow::on_startUpButton_clicked()
+{
     emit diskSpaceAltered();
 }
 
