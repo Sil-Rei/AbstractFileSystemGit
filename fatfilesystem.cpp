@@ -10,6 +10,7 @@
 #include <cmath>
 #include <ctime>
 #include <iostream>
+#include <QDebug>
 
 
 using namespace std;
@@ -59,8 +60,6 @@ fatFileSystem::BsFat* fatFileSystem::createBsFat(unsigned int driveSize, unsigne
     BsFat* fat = new BsFat();
     fat->blockSize = blockSize;
     fat->driveSize = driveSize;
-    fat->amountOfFiles = 0;
-    fat->arrayOfFiles = static_cast<BsFile **>(malloc(sizeof(struct BsFile) * 20));
     fat->amountOfBlocks = (int)ceil((double)driveSize/blockSize);
     printf("Amount of blocks in drive: %d\n", fat->amountOfBlocks);
     fat->listOfStati = new unsigned char[fat->amountOfBlocks];
@@ -120,15 +119,15 @@ void fatFileSystem::createFile(int szFile, QString name, unsigned char systemFla
 
         appendNode(file, randomPositionInStatiArray);
     }
-
-    pFat->arrayOfFiles[pFat->amountOfFiles++] = file;
+    pFat->listOfFiles.append(file);
 
 }
 
 void fatFileSystem::deleteFile(QString fileName){
-    for(int i = 0; i < pFat->amountOfFiles; i++){
-        if(pFat->arrayOfFiles[i]->name == fileName){
-            struct Node* tempNode = pFat->arrayOfFiles[i]->head;
+    for(int i = 0; i < pFat->listOfFiles.count(); i++){
+        if(pFat->listOfFiles.at(i)->name == fileName){
+            qDebug() << "yeye";
+            struct Node* tempNode = pFat->listOfFiles.at(i)->head;
             while(tempNode->nextNode != nullptr){
                 tempNode = tempNode->nextNode;
             }
@@ -136,14 +135,10 @@ void fatFileSystem::deleteFile(QString fileName){
                 pFat->listOfStati[tempNode->index] = FREE;
                 m_disk->getPlate()[tempNode->index] = FREE;
                 tempNode = tempNode->lastNode;
+
                 // TODO nodes still existing in nirvana
             }
-            pFat->arrayOfFiles[i]->head = nullptr;
-            pFat->arrayOfFiles[i]->name = QString("");
-            pFat->arrayOfFiles[i]->fileLength = 0;
-            pFat->arrayOfFiles[i]->systemFlag = 0;
-
-            pFat->amountOfFiles--;
+            pFat->listOfFiles.removeAt(i);
             return;
         }
     }
@@ -159,8 +154,8 @@ void fatFileSystem::showFat(){
             printf("|R");
         }else if(pFat->listOfStati[i] == OCCUPIED){
             // Loop through array of files and their nodes to find the correct file index
-            for(int x = 0; x < pFat->amountOfFiles; x++){
-                struct Node* tempNode = pFat->arrayOfFiles[x]->head;
+            for(int x = 0; x < pFat->listOfFiles.count(); x++){
+                struct Node* tempNode = pFat->listOfFiles.at(x)->head;
                 while(tempNode != NULL){
                     if(tempNode->index == i){
                         printf("|%d", x);
@@ -236,9 +231,9 @@ void fatFileSystem::defrag(){
         newArr[0] = RESERVED;
         newArr[1] = OCCUPIED;
 
-    for(int file = 0; file < pFat->amountOfFiles; file++){
+    for(int file = 0; file < pFat->listOfFiles.count(); file++){
 
-        Node* tempNode = pFat->arrayOfFiles[file]->head;
+        Node* tempNode = pFat->listOfFiles.at(file)->head;
         while(tempNode != NULL){
             for(int block = 0; block < pFat->amountOfBlocks; block++){
                 if(newArr[block] == FREE){
@@ -259,5 +254,6 @@ void fatFileSystem::defrag(){
 }
 
 bool fatFileSystem::checkName(QString fileName){
+
     return true;
 }
