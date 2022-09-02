@@ -9,7 +9,7 @@ class inodefilesystem : public abstractFilesystem
 {
 public:
 
-
+       //test
     //contains the 12 direct Blockptrs
     struct iNode {
         unsigned int simplePtrs[12];
