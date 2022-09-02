@@ -53,15 +53,19 @@ MainWindow::~MainWindow()
 
 // Setzt die Label und callt paintShit
 void MainWindow::updateDiskInformation(){
-    ui->sizeInKbLabel->setText(QString("Größe (in kB):           %1").arg(disk->getDiskSize()));
-    ui->blockSizeLabel->setText(QString("Blockgröße:              %1").arg(disk->getBlockSize()));
-    ui->blockAmountLabel->setText(QString("Block Anzahl:         %1").arg(disk->getAmountOfBlocks()));
+    ui->sizeInKbLabel->setText(QString("Größe (in kB):               %1").arg(disk->getDiskSize()));
+    ui->blockSizeLabel->setText(QString("Blockgröße:                  %1").arg(disk->getBlockSize()));
+    ui->blockAmountLabel->setText(QString("Block Anzahl:                %1").arg(disk->getAmountOfBlocks()));
+    ui->freeBlocksLabel->setText(QString("Freie Blöcke:                 %1").arg(disk->getFreeDiskSpaceInBlocks()));
+    ui->freeDiskSpaceLabel->setText(QString("Freier Speicher(in kB):   %1").arg(disk->getFreeDiskSpaceInBlocks()*disk->getBlockSize()/1000));
+    ui->fragmentationLabel->setText(QString("Fragmentierung:            %1%").arg(100-disk->getFragmentation()));
     paintPlate();
 }
 
 void MainWindow::updateDisk(){
-    ui->freeBlocksLabel->setText(QString("Freie Blöcke:           %1").arg(disk->getFreeDiskSpaceInBlocks()));
-    ui->fragmentationLabel->setText(QString("Fragmentierung:           %1%").arg(100-disk->getFragmentation()));
+    ui->freeBlocksLabel->setText(QString("Freie Blöcke:                 %1").arg(disk->getFreeDiskSpaceInBlocks()));
+    ui->fragmentationLabel->setText(QString("Fragmentierung:            %1%").arg(100-disk->getFragmentation()));
+    ui->freeDiskSpaceLabel->setText(QString("Freier Speicher(in kB):   %1").arg(disk->getFreeDiskSpaceInBlocks()*disk->getBlockSize()/1000));
     paintPlate();
 }
 

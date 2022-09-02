@@ -63,11 +63,11 @@ fatFileSystem::BsFat* fatFileSystem::createBsFat(unsigned int driveSize, unsigne
     fat->amountOfBlocks = (int)ceil((double)driveSize/blockSize);
     printf("Amount of blocks in drive: %d\n", fat->amountOfBlocks);
     fat->listOfStati = new unsigned char[fat->amountOfBlocks];
-    fat->listOfStati[0] = OCCUPIED;
-    fat->listOfStati[1] = OCCUPIED;
     for(int i = 0; i < fat->amountOfBlocks; i++){
         fat->listOfStati[i] = FREE;
     }
+    fat->listOfStati[0] = RESERVED;
+    fat->listOfStati[1] = OCCUPIED;
 
     return fat;
 }
