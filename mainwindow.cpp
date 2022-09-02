@@ -107,6 +107,16 @@ void MainWindow::on_reinitializeHDDButton_clicked()
             int blockSize = fields.at(1)->text().toInt();
             qDebug() << "DiskSize: " << diskSize << " Blocksize: " << blockSize;
 
+            // Check if size is valid
+            if(diskSize*1000 / blockSize > 2500){
+                QMessageBox box;
+                box.setText("Zu kleine Blöckgröße bzw. zu große Plattengröße");
+                box.setIcon(QMessageBox::Warning);
+                box.addButton("OK", QMessageBox::AcceptRole);
+                box.exec();
+                return;
+            }
+
             disk = new Disk(diskSize, blockSize);
             if(ui->fatRadioButton->isChecked()){
                 fs = new fatFileSystem(disk);
