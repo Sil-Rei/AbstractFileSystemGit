@@ -266,6 +266,12 @@
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
            <widget class="QLabel" name="label_2">
+            <property name="font">
+             <font>
+              <bold>true</bold>
+              <underline>true</underline>
+             </font>
+            </property>
             <property name="text">
              <string>Festplatteninformationen</string>
             </property>
@@ -309,7 +315,7 @@
           <item>
            <widget class="QLabel" name="fragmentationLabel">
             <property name="text">
-             <string>Fragmentierung:        0.00%     </string>
+             <string>Fragmentierung:                </string>
             </property>
            </widget>
           </item>
@@ -317,6 +323,19 @@
         </item>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="font">
+             <font>
+              <bold>true</bold>
+              <underline>true</underline>
+             </font>
+            </property>
+            <property name="text">
+             <string>Dateiinformationen</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QLabel" name="sizeInfoLabel">
             <property name="text">
