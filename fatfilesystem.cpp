@@ -90,6 +90,7 @@ void fatFileSystem::createFile(int szFile, QString name, unsigned char systemFla
     }
     int blocksNeeded = ceil((double)szFile / pFat->blockSize);
     int freeDiskSpace = getFreeDiskSpace();
+
     if(blocksNeeded > freeDiskSpace){
         fprintf(stderr, "Error, FileSize is too large for existing disk space\n");
         exit(-1);
@@ -209,10 +210,10 @@ float fatFileSystem::getFragmentation(){
 
 void fatFileSystem::defrag(){
     // Check if enough space for defrag is available
-    if((double)getFreeDiskSpace()/pFat->amountOfBlocks < 0.1){
-        fprintf(stderr, "Not enough space for defragmentation.\n");
-        exit(-1);
-    }
+//    if((double)getFreeDiskSpace()/pFat->amountOfBlocks < 0.1){
+//        fprintf(stderr, "Not enough space for defragmentation.\n");
+//        exit(-1);
+//    }
 
     //create new empty "plate"
     unsigned char* newArr = new unsigned char[pFat->amountOfBlocks];

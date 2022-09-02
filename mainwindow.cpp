@@ -212,10 +212,10 @@ void MainWindow::on_createFileButton_clicked()
         }
         // Check for integrity
         if(!fs->checkName(fileName)){
-
             return;
         }
         int fileSize = fields.at(1)->text().toInt();
+        //qDebug() << "Freie Blöcke: " << disk->getFreeDiskSpaceInBlocks() << " Benötigte Blöcke: " << ceil((double)fileSize / disk->getBlockSize());
         if(fileSize <= 0){
             QMessageBox box;
             box.setText("Filegröße muss über 0 sein.");
@@ -223,7 +223,7 @@ void MainWindow::on_createFileButton_clicked()
             box.addButton("OK", QMessageBox::AcceptRole);
             box.exec();
             return;
-        }else if((fileSize / disk->getBlockSize()) > disk->getFreeDiskSpaceInBlocks()){
+        }else if(ceil((double)fileSize / disk->getBlockSize()) > disk->getFreeDiskSpaceInBlocks()){
             QMessageBox box;
             box.setText("Nicht genug Speicherplatz");
             box.setIcon(QMessageBox::Warning);
