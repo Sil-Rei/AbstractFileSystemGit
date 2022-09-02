@@ -25,7 +25,6 @@ inodefilesystem::iNode* inodefilesystem::createInode(QString author, unsigned in
     placeholderINode->fileSize = fileSize;
     placeholderINode->ownerUID = ownerUID;
 
-
     return placeholderINode;
 }
 
@@ -155,7 +154,7 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
     //inodefilesystem::m_inodeTable.insert(pair<QString, unsigned int>(currentiNode->fileName, currentiNode->iNumb));
     //inodefilesystem::addToInodeArr(currentiNode, currentiNode->iNumb);
 
-    //qDebug() << ""  << m_inodeArr[currentiNode->iNumb].fileName;
+    //qDebug() << "->>>"  << m_inodeArr[currentiNode->iNumb].fileName;
 
 };
 
