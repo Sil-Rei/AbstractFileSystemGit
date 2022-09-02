@@ -4,6 +4,7 @@
 #include <math.h>
 #include "statusTypes.h"
 #include "disk.h"
+#include <QDebug>
 //p
 using namespace std;
 
@@ -11,9 +12,9 @@ using namespace std;
 inodefilesystem::inodefilesystem(Disk* disk)
 {
     map<QString,unsigned int> inodeTable;
-
-    inodefilesystem::iNode* inodeArr;
     m_disk = disk;
+    //Set the
+    inodefilesystem::iNode* inodeArr = new inodefilesystem::iNode[disk->getAmountOfBlocks()-2]();
     m_iNumb = 0;
 
 }
@@ -28,19 +29,20 @@ inodefilesystem::iNode* inodefilesystem::createInode(QString author, unsigned in
 
     return placeholderINode;
 }
+
 // check if the files blocksize exceeds each of the PtrStorage
 // Add the file to the inode-Table and
 void inodefilesystem::createFile(int szFile, QString name, unsigned char systemFlag){
 
     int rndm;
-    /*inodefilesystem::singlePtrs* x = new inodefilesystem::singlePtrs();
-    inodefilesystem::doublePtrs* y = new inodefilesystem::doublePtrs();
-    inodefilesystem::triplePtrs* z = new inodefilesystem::triplePtrs();*/
+
+
     inodefilesystem::iNode *currentiNode = createInode("user", 132 , 2);
     currentiNode->fileName = name;
 
+
     int blocksNeeded = ceil((double)szFile / m_disk->getBlockSize());
-    cout << blocksNeeded;
+    qDebug() << blocksNeeded;
 
     if(blocksNeeded >= m_disk->getFreeDiskSpaceInBlocks()) {
       return;
@@ -49,12 +51,14 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
         currentiNode->sizeFlag = 'a';
     } else if(blocksNeeded > 12 && blocksNeeded < 256) {
         currentiNode->sizeFlag = 'b';
-    } else if(blocksNeeded > 256 && blocksNeeded < 65536) {
+        currentiNode->singleptrs = new unsigned int[10000]();
+    } else if(blocksNeeded > 268 && blocksNeeded < 65536) {
         currentiNode->sizeFlag = 'c';
-    } else if(blocksNeeded > 65536 ) {
+        currentiNode->singleptrs = new unsigned int[100000]();
+    } else if(blocksNeeded > 65536 && blocksNeeded < 16777216) {
         currentiNode->sizeFlag = 'd';
     };
-
+    qDebug() << currentiNode->sizeFlag;
     switch(currentiNode->sizeFlag) {
         //Just 12 Blocks a needed so the simple ptrs are enough
         case 'a':
@@ -68,17 +72,21 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
             break;
         //the File needs 12-256 blocks
         case 'b':
+
             for(int i = 0; i < 12; i++) {
+                qDebug() << "enterd simple ptr loop" << i;
                 do {
                     rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
                 } while(m_disk->getPlate()[rndm] != FREE);
                 currentiNode->simplePtrs[i] = rndm;
                 m_disk->getPlate()[rndm] = OCCUPIED;
             }
-            for(int i = 0; i < blocksNeeded-12; i++) {
+            for(int i = 0; i < (blocksNeeded-12); i++) {
+                qDebug() << "enterd loop" << i;
                 do {
                     rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
                 } while(m_disk->getPlate()[rndm] != FREE);
+                qDebug() << "crash vermutlich durch nullptr";
                 currentiNode->singleptrs[i] = rndm;
                 m_disk->getPlate()[rndm] = OCCUPIED;
             }
@@ -141,70 +149,33 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
         default:
             std::cout << "hallo " << std::endl;
             break;
-/*
-    if(blocksNeeded <= 12) {
-        for(int i = 0; i < blocksNeeded; i++) {
-            currentiNode->simplePtrs[i] = rndm;
-            m_disk->getPlate()[i] = OCCUPIED;
 
-        }
+    };
 
-    } else if(blocksNeeded > 12 && blocksNeeded <= 256) {
-        x = new inodefilesystem::singlePtrs();
-        for(int i = 0; i < blocksNeeded; i++) {
-            if(i > 12) {
-                x[i] = rndm;
-                m_disk->getPlate()[i] = OCCUPIED;
-            } else {
-                currentiNode->simplePtrs[i] = i;
-                m_disk->getPlate()[i] = OCCUPIED;
-            }
-
-        }
-
-
-    } else if(blocksNeeded > 256 && blocksNeeded <= 65536) {
-        inodefilesystem::singlePtrs* x = new inodefilesystem::singlePtrs();
-        inodefilesystem::doublePtrs* y = new inodefilesystem::doublePtrs();
-        for(int i = 0; i < blocksNeeded; i++) {
-            currentiNode->simplePtrs[i] = i;
-            m_disk->getPlate()[i] = OCCUPIED;
-        }
-    } else if(blocksNeeded > 65536 && blocksNeeded <= 16777216) {
-        inodefilesystem::singlePtrs* x = new inodefilesystem::singlePtrs();
-        inodefilesystem::doublePtrs* y = new inodefilesystem::doublePtrs();
-        inodefilesystem::triplePtrs* z = new inodefilesystem::triplePtrs();
-        for(int i = 0; i < blocksNeeded; i++) {
-            currentiNode->simplePtrs[i] = i;
-            m_disk->getPlate()[i] = OCCUPIED;
-        }
-*/
     inodefilesystem::inodeTable.insert(pair<QString, unsigned int>(currentiNode->fileName, currentiNode->iNumb));
-    //inodefilesystem::inodeArr[currentiNode->iNumb] = &currentiNode;
-}
+    //inodeArr[currentiNode->iNumb] = currentiNode;
 };
+
 
 
 unsigned int* locateFile(inodefilesystem::iNode* inode, int blockSize) {
     unsigned int blocksInUse = ceil((double)inode->fileSize / blockSize);
+
+    char sizeFlag = inode->sizeFlag;
     unsigned int *blockArray = new unsigned int[blocksInUse];
-    char blockStatus;
-    if(blocksInUse > 0 || blocksInUse <= 12)
-    if(blocksInUse > 0 || blocksInUse <= 12) {
-      for(int i = 0; i < blocksInUse; i++) {
-          blockArray[i] = inode->simplePtrs[i];
-      };
+    switch(sizeFlag) {
+        case 'a':
+        break;
+        case 'b':
+        break;
+        case 'c':
+        break;
+        case 'd':
+        break;
+        default:
+        break;
     };
-    if(blocksInUse > 12 || blocksInUse <= 256) {
-      for(int i = 0; i < blocksInUse; i++) {
-          blockArray[i] = inode->simplePtrs[i];
-      };
-    };
-    if(blocksInUse > 0 || blocksInUse <= 12) {
-      for(int i = 0; i < blocksInUse; i++) {
-          blockArray[i] = inode->simplePtrs[i];
-      };
-    };
+
 
     return blockArray;
 }
