@@ -184,5 +184,9 @@ bool inodefilesystem::checkName(QString fileName){
 
 long inodefilesystem::getFileSize(QString fileName)
 {
-
+    long fileSize;
+    unsigned int iNumb = m_inodeTable.at(fileName);
+    iNode ph = m_listOfFiles.at(iNumb);
+    fileSize = ph.fileSize;
+    return fileSize;
 }
