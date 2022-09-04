@@ -181,3 +181,8 @@ void inodefilesystem::defrag(){
 bool inodefilesystem::checkName(QString fileName){
     return true;
 }
+
+long inodefilesystem::getFileSize(QString fileName)
+{
+
+}

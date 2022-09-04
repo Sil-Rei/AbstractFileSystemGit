@@ -11,6 +11,7 @@
 #include <math.h>
 #include <QFormLayout>
 #include <QMessageBox>
+#include <QChar>
 
 Disk* disk;
 abstractFilesystem* fs;
@@ -43,6 +44,33 @@ MainWindow::MainWindow(QWidget *parent)
     ui->fileSystemTreeView->setModel(model);
     QModelIndex idx = model->index("FileSystem");
     ui->fileSystemTreeView->setRootIndex(idx);
+    ui->fileSystemTreeView->hideColumn(1);
+
+    // set rect icons for legend
+    QPixmap pixmapFree(20,20);
+    QPainter painterFree(&pixmapFree);
+    painterFree.setBrush(QBrush(Qt::green));
+    painterFree.drawRect(0,0,20,20);
+    ui->freeLegendIconLabel->setPixmap(pixmapFree);
+
+    QPixmap pixmapUsed(20,20);
+    QPainter painterUsed(&pixmapUsed);
+    painterUsed.setBrush(QBrush(Qt::yellow));
+    painterUsed.drawRect(0,0,20,20);
+    ui->usedLegendIconLabel->setPixmap(pixmapUsed);
+
+    QPixmap pixmapReserved(20,20);
+    QPainter painterReserved(&pixmapReserved);
+    painterReserved.setBrush(QBrush(Qt::blue));
+    painterReserved.drawRect(0,0,20,20);
+    ui->reservedLegendIconLabel->setPixmap(pixmapReserved);
+
+    QPixmap pixmapNotInit(20,20);
+    QPainter painterNotInit(&pixmapNotInit);
+    painterNotInit.setBrush(QBrush(Qt::gray));
+    painterNotInit.drawRect(0,0,20,20);
+    ui->notInitLegendIconLabel->setPixmap(pixmapNotInit);
+
 }
 
 MainWindow::~MainWindow()
@@ -53,15 +81,19 @@ MainWindow::~MainWindow()
 
 // Setzt die Label und callt paintShit
 void MainWindow::updateDiskInformation(){
-    ui->sizeInKbLabel->setText(QString("Größe (in kB):           %1").arg(disk->getDiskSize()));
-    ui->blockSizeLabel->setText(QString("Blockgröße:              %1").arg(disk->getBlockSize()));
-    ui->blockAmountLabel->setText(QString("Block Anzahl:         %1").arg(disk->getAmountOfBlocks()));
+    ui->sizeInKbLabel->setText(QString("Größe (in kB):               %1").arg(disk->getDiskSize()));
+    ui->blockSizeLabel->setText(QString("Blockgröße:                  %1").arg(disk->getBlockSize()));
+    ui->blockAmountLabel->setText(QString("Block Anzahl:                %1").arg(disk->getAmountOfBlocks()));
+    ui->freeBlocksLabel->setText(QString("Freie Blöcke:                 %1").arg(disk->getFreeDiskSpaceInBlocks()));
+    ui->freeDiskSpaceLabel->setText(QString("Freier Speicher(in kB):   %1").arg(disk->getFreeDiskSpaceInBlocks()*disk->getBlockSize()/1000));
+    ui->fragmentationLabel->setText(QString("Fragmentierung:            %1%").arg(100-disk->getFragmentation()));
     paintPlate();
 }
 
 void MainWindow::updateDisk(){
-    ui->freeBlocksLabel->setText(QString("Freie Blöcke:           %1").arg(disk->getFreeDiskSpaceInBlocks()));
-    ui->fragmentationLabel->setText(QString("Fragmentierung:           %1%").arg(100-disk->getFragmentation()));
+    ui->freeBlocksLabel->setText(QString("Freie Blöcke:                 %1").arg(disk->getFreeDiskSpaceInBlocks()));
+    ui->fragmentationLabel->setText(QString("Fragmentierung:            %1%").arg(100-disk->getFragmentation()));
+    ui->freeDiskSpaceLabel->setText(QString("Freier Speicher(in kB):   %1").arg(disk->getFreeDiskSpaceInBlocks()*disk->getBlockSize()/1000));
     paintPlate();
 }
 
@@ -106,6 +138,16 @@ void MainWindow::on_reinitializeHDDButton_clicked()
             int diskSize = fields.at(0)->text().toInt();
             int blockSize = fields.at(1)->text().toInt();
             qDebug() << "DiskSize: " << diskSize << " Blocksize: " << blockSize;
+
+            // Check if size is valid
+            if(diskSize*1000 / blockSize > 2500){
+                QMessageBox box;
+                box.setText("Zu kleine Blöckgröße bzw. zu große Plattengröße");
+                box.setIcon(QMessageBox::Warning);
+                box.addButton("OK", QMessageBox::AcceptRole);
+                box.exec();
+                return;
+            }
 
             disk = new Disk(diskSize, blockSize);
             if(ui->fatRadioButton->isChecked()){
@@ -196,16 +238,16 @@ void MainWindow::on_createFileButton_clicked()
 
     if (dialog.exec() == QDialog::Accepted) {
         QString fileName = fields.at(0)->text();
+        // if fs is fat, convert name to upper
+        if(dynamic_cast<inodefilesystem*>(fs) == nullptr){
+            fileName = fileName.toUpper();
+        }
         // Check for integrity
         if(!fs->checkName(fileName)){
-            QMessageBox box;
-            box.setText("Achten Sie auf einen gültigen Filenamen.");
-            box.setIcon(QMessageBox::Warning);
-            box.addButton("OK", QMessageBox::AcceptRole);
-            box.exec();
             return;
         }
         int fileSize = fields.at(1)->text().toInt();
+        //qDebug() << "Freie Blöcke: " << disk->getFreeDiskSpaceInBlocks() << " Benötigte Blöcke: " << ceil((double)fileSize / disk->getBlockSize());
         if(fileSize <= 0){
             QMessageBox box;
             box.setText("Filegröße muss über 0 sein.");
@@ -213,7 +255,7 @@ void MainWindow::on_createFileButton_clicked()
             box.addButton("OK", QMessageBox::AcceptRole);
             box.exec();
             return;
-        }else if((fileSize / disk->getBlockSize()) > disk->getFreeDiskSpaceInBlocks()){
+        }else if(ceil((double)fileSize / disk->getBlockSize()) > disk->getFreeDiskSpaceInBlocks()){
             QMessageBox box;
             box.setText("Nicht genug Speicherplatz");
             box.setIcon(QMessageBox::Warning);
@@ -254,37 +296,68 @@ void MainWindow::on_createDirButton_clicked()
     emit diskSpaceAltered();
 }
 
+bool removeDir(const QString & dirName)
+{
+    bool result = true;
+    QDir dir(dirName);
+
+    if (dir.exists(dirName)) {
+        Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+            if (info.isDir()) {
+                result = removeDir(info.absoluteFilePath());
+            } else {
+                fs->deleteFile(info.fileName());
+                result = QFile::remove(info.absoluteFilePath());
+            }
+
+            if (!result) {
+                return result;
+            }
+        }
+        result = dir.rmdir(dirName);
+    }
+    return result;
+}
+
 void MainWindow::on_deleteSelectionButton_clicked()
 {
     QModelIndex index = ui->fileSystemTreeView->currentIndex();
     if(!index.isValid()) return;
     if(model->fileInfo(index).fileName() == "root") return;
-    if(!model->fileInfo(index).isDir()){
+    if(model->fileInfo(index).isDir()){
+        QString path = model->fileInfo(index).absoluteFilePath();
+        qDebug() << "Pfad: " << path;
+        removeDir(path);
+    }else{
         fs->deleteFile(model->fileInfo(index).fileName());
+        model->remove(index);
     }
-    model->remove(index);
+
+
     emit diskSpaceAltered();
 }
 
 
 void MainWindow::on_fileSystemTreeView_clicked(const QModelIndex &index)
 {
+    QString fileName = model->fileInfo(index).fileName();
+    ui->fileNameInfoLabel->setText(QString("Name: %1").arg(fileName));
+    int fileSize = 0;
     if(fs != nullptr){
         ui->createFileButton->setEnabled(true);
         ui->createDirButton->setEnabled(true);
         ui->deleteSelectionButton->setEnabled(true);
+        fileSize = fs->getFileSize(fileName);
+
     }
-
-    QString fileName = model->fileInfo(index).fileName();
-    ui->fileNameInfoLabel->setText(QString("Name: %1").arg(fileName));
-
-    qint64 fileSize = model->fileInfo(index).size();
 
     ui->sizeInfoLabel->setText(QString("Größe: %1").arg(fileSize));
 
     QString filePath = model->fileInfo(index).filePath();
-    filePath ="root/" + filePath.split("root")[1];
+    filePath ="root" + filePath.split("root")[1];
     ui->pathInfoLabel->setText(QString("Pfad: %1").arg(filePath));
+
+
 }
 
 void MainWindow::on_defragButton_clicked()

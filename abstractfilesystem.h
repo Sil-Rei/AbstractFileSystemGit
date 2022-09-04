@@ -9,6 +9,7 @@ public:
     virtual void deleteFile(QString fileName) = 0;
     virtual void defrag() = 0;
     virtual bool checkName(QString fileName) = 0;
+    virtual long getFileSize(QString fileName) = 0;
 
 };
 

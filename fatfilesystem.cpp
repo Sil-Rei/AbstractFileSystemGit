@@ -11,7 +11,7 @@
 #include <ctime>
 #include <iostream>
 #include <QDebug>
-
+#include <QMessageBox>
 
 using namespace std;
 
@@ -63,11 +63,11 @@ fatFileSystem::BsFat* fatFileSystem::createBsFat(unsigned int driveSize, unsigne
     fat->amountOfBlocks = (int)ceil((double)driveSize/blockSize);
     printf("Amount of blocks in drive: %d\n", fat->amountOfBlocks);
     fat->listOfStati = new unsigned char[fat->amountOfBlocks];
-    fat->listOfStati[0] = OCCUPIED;
-    fat->listOfStati[1] = OCCUPIED;
     for(int i = 0; i < fat->amountOfBlocks; i++){
         fat->listOfStati[i] = FREE;
     }
+    fat->listOfStati[0] = RESERVED;
+    fat->listOfStati[1] = OCCUPIED;
 
     return fat;
 }
@@ -90,6 +90,7 @@ void fatFileSystem::createFile(int szFile, QString name, unsigned char systemFla
     }
     int blocksNeeded = ceil((double)szFile / pFat->blockSize);
     int freeDiskSpace = getFreeDiskSpace();
+
     if(blocksNeeded > freeDiskSpace){
         fprintf(stderr, "Error, FileSize is too large for existing disk space\n");
         exit(-1);
@@ -126,7 +127,6 @@ void fatFileSystem::createFile(int szFile, QString name, unsigned char systemFla
 void fatFileSystem::deleteFile(QString fileName){
     for(int i = 0; i < pFat->listOfFiles.count(); i++){
         if(pFat->listOfFiles.at(i)->name == fileName){
-            qDebug() << "yeye";
             struct Node* tempNode = pFat->listOfFiles.at(i)->head;
             while(tempNode->nextNode != nullptr){
                 tempNode = tempNode->nextNode;
@@ -209,10 +209,10 @@ float fatFileSystem::getFragmentation(){
 
 void fatFileSystem::defrag(){
     // Check if enough space for defrag is available
-    if((double)getFreeDiskSpace()/pFat->amountOfBlocks < 0.1){
-        fprintf(stderr, "Not enough space for defragmentation.\n");
-        exit(-1);
-    }
+//    if((double)getFreeDiskSpace()/pFat->amountOfBlocks < 0.1){
+//        fprintf(stderr, "Not enough space for defragmentation.\n");
+//        exit(-1);
+//    }
 
     //create new empty "plate"
     unsigned char* newArr = new unsigned char[pFat->amountOfBlocks];
@@ -254,6 +254,66 @@ void fatFileSystem::defrag(){
 }
 
 bool fatFileSystem::checkName(QString fileName){
+    if(fileName.contains(".")){
+        if(fileName.size() > 12){
+            QMessageBox box;
+            box.setText("Filename ist nicht zwischen 1-8 Zeichen lang bzw. 1-12 mit optionaler Extension.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }else if(fileName.split(".")[1].size() > 3 || fileName.split(".")[1].size() < 1){
+            QMessageBox box;
+            box.setText("Filename ist nicht zwischen 1-8 Zeichen lang bzw. 1-12 mit optionaler Extension.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }else{
+        if(fileName.size() > 8 || fileName.size() < 1){
+            QMessageBox box;
+            box.setText("Filename ist nicht zwischen 1-8 Zeichen lang bzw. 1-12 mit optionaler Extension.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }
+    // Check if name is already in use
+    for(int i = 0; i < pFat->listOfFiles.count(); i++){
+        if(pFat->listOfFiles.at(i)->name == fileName){
+            QMessageBox box;
+            box.setText("Filename existiert bereits.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }
+
+    // Check if name contains forbidden chars
+    for(int i = 0; i < fileName.size(); i++){
+        if(!fileName[i].isLetterOrNumber() && fileName[i] != QString("_") && fileName[i] != QString(".")){
+            QMessageBox box;
+            box.setText("Filename enthält unzulässige Zeichen.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }
 
     return true;
+}
+
+long fatFileSystem::getFileSize(QString fileName)
+{
+    for(int i = 0; i < pFat->listOfFiles.size(); i++){
+        if(pFat->listOfFiles.at(i)->name == fileName){
+            return pFat->listOfFiles.at(i)->fileLength;
+        }
+    }
+    return 0;
+
 }
