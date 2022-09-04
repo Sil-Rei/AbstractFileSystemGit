@@ -127,7 +127,6 @@ void fatFileSystem::createFile(int szFile, QString name, unsigned char systemFla
 void fatFileSystem::deleteFile(QString fileName){
     for(int i = 0; i < pFat->listOfFiles.count(); i++){
         if(pFat->listOfFiles.at(i)->name == fileName){
-            qDebug() << "yeye";
             struct Node* tempNode = pFat->listOfFiles.at(i)->head;
             while(tempNode->nextNode != nullptr){
                 tempNode = tempNode->nextNode;
@@ -295,7 +294,7 @@ bool fatFileSystem::checkName(QString fileName){
 
     // Check if name contains forbidden chars
     for(int i = 0; i < fileName.size(); i++){
-        if(!fileName[i].isLetterOrNumber() && fileName[i] != "_" && fileName[i] != "."){
+        if(!fileName[i].isLetterOrNumber() && fileName[i] != QString("_") && fileName[i] != QString(".")){
             QMessageBox box;
             box.setText("Filename enthält unzulässige Zeichen.");
             box.setIcon(QMessageBox::Warning);
@@ -306,4 +305,15 @@ bool fatFileSystem::checkName(QString fileName){
     }
 
     return true;
+}
+
+long fatFileSystem::getFileSize(QString fileName)
+{
+    for(int i = 0; i < pFat->listOfFiles.size(); i++){
+        if(pFat->listOfFiles.at(i)->name == fileName){
+            return pFat->listOfFiles.at(i)->fileLength;
+        }
+    }
+    return 0;
+
 }

@@ -41,6 +41,7 @@ public:
     virtual void deleteFile(QString fileName);
     virtual void defrag();
     virtual bool checkName(QString fileName);
+    virtual long getFileSize(QString fileName);
 
 private:
     Disk* m_disk;
