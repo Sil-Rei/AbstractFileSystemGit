@@ -44,7 +44,7 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
     };
     if(blocksNeeded > 0 && blocksNeeded < 12) {
             currentiNode->sizeFlag = 'a';
-            for(int i = 0; i < 12; i++) {
+            for(int i = 0; i < blocksNeeded; i++) {
                 do {
                     rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
                 } while(m_disk->getPlate()[rndm] != FREE);
@@ -139,7 +139,9 @@ vector<int> inodefilesystem::locateFile(QString fileName) {
     unsigned int iNumb = m_inodeTable.at(fileName);
     iNode ph = m_listOfFiles.at(iNumb);
     vector<int> blocks;
-    int arrSize = sizeof(*ph.simplePtrs)/sizeof(ph.simplePtrs[0]);
+    int arrSize = *(&ph.simplePtrs + 1) - ph.simplePtrs;
+    //int arrSize = sizeof(*ph.simplePtrs)/sizeof(ph.simplePtrs[0]);
+    qDebug() << "arrSize:" << arrSize;
     for(int i = 0; i < arrSize; i++) {
         blocks.push_back(ph.simplePtrs[i]);
     }
