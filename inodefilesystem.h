@@ -13,9 +13,9 @@ public:
     //contains the 12 direct Blockptrs
     struct iNode {
         unsigned int simplePtrs[12];
-        unsigned int* singleptrs;
-        unsigned int* doubleptrs;
-        unsigned int* tripleptrs;
+        std::vector<int> singleptrs{};
+        std::vector<int> doubleptrs{};
+        std::vector<int> tripleptrs{};
         unsigned int iNumb;
         unsigned int fileSize;
         unsigned int ownerUID;
@@ -28,12 +28,10 @@ public:
       iNode* referediNode;
 
     };
-    void addToInodeArr(iNode* x, int index) {
-        m_inodeArr[index] = *x;
-    };
+
     iNode* createInode(QString author, unsigned int fileSize, unsigned int ownerUID);
 
-    unsigned int* locateFile(iNode* x);
+    vector<int> locateFile(QString name);
 
     inodefilesystem(Disk* disk);
 
@@ -47,7 +45,8 @@ private:
     Disk* m_disk;
     map<QString, unsigned int> m_inodeTable;
     unsigned int m_iNumb;
-    iNode* m_inodeArr;
+    QList<iNode> m_listOfFiles;
+
 };
 
 #endif // INODEFILESYSTEM_H
