@@ -13,7 +13,7 @@ inodefilesystem::inodefilesystem(Disk* disk)
 {
     map<QString,unsigned int> m_inodeTable;
     m_disk = disk;
-    inodefilesystem::iNode* m_inodeArr = new inodefilesystem::iNode[disk->getAmountOfBlocks()-2]();
+    QList<iNode> m_listOfFiles;
     m_iNumb = 0;
 
 }
@@ -43,147 +43,134 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
       return;
     };
     if(blocksNeeded > 0 && blocksNeeded < 12) {
-        currentiNode->sizeFlag = 'a';
-    } else if(blocksNeeded > 12 && blocksNeeded < 256) {
-        currentiNode->sizeFlag = 'b';
-        currentiNode->singleptrs = new unsigned int[256]();
-    } else if(blocksNeeded > 268 && blocksNeeded < 65536) {
-        currentiNode->sizeFlag = 'c';
-        currentiNode->singleptrs = new unsigned int[256]();
-        currentiNode->doubleptrs = new unsigned int[1000]();
-    } else if(blocksNeeded > 65536 && blocksNeeded < 16777216) {
-        currentiNode->sizeFlag = 'd';
-        currentiNode->singleptrs = new unsigned int[256]();
-        currentiNode->doubleptrs = new unsigned int[1000]();
-        currentiNode->singleptrs = new unsigned int[100000]();
-    };
+            currentiNode->sizeFlag = 'a';
+            for(int i = 0; i < 12; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->simplePtrs[i] = rndm;
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+     } else if(blocksNeeded > 12 && blocksNeeded < 268) {
+            currentiNode->sizeFlag = 'b';
+            for(int i = 0; i < 12; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->simplePtrs[i] = rndm;
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+            for(int i = 0; i < 256; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->singleptrs.push_back(rndm);
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+     } else if(blocksNeeded > 268 && blocksNeeded < (65536+268)) {
+            currentiNode->sizeFlag = 'c';
+            for(int i = 0; i < 12; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->simplePtrs[i] = rndm;
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+            for(int i = 0; i < 256; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->singleptrs.push_back(rndm);
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+            for(int i = 0; i < 65636; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->doubleptrs.push_back(rndm);
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+     } else if(blocksNeeded > 65536 && blocksNeeded < (16777216+65536)) {
+            currentiNode->sizeFlag = 'd';
+            for(int i = 0; i < 12; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->simplePtrs[i] = rndm;
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+            for(int i = 0; i < 256; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->singleptrs.push_back(rndm);
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+            for(int i = 0; i < 65636; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->doubleptrs.push_back(rndm);
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+            for(int i = 0; i < 65636; i++) {
+                do {
+                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+                } while(m_disk->getPlate()[rndm] != FREE);
+                currentiNode->tripleptrs.push_back(rndm);
+                m_disk->getPlate()[rndm] = OCCUPIED;
+            }
+        };
+
     qDebug() << currentiNode->sizeFlag;
-    switch(currentiNode->sizeFlag) {
-        //Just 12 Blocks a needed so the simple ptrs are enough
-        case 'a':
-            for(int i = 0; i < blocksNeeded; i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->simplePtrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            break;
-        //the File needs 12-256 blocks
-        case 'b':
 
-            for(int i = 0; i < 12; i++) {
-                qDebug() << "enterd simple ptr loop" << i;
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->simplePtrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            for(int i = 0; i < (blocksNeeded-12); i++) {
-                qDebug() << "enterd loop" << i;
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                qDebug() << "crash vermutlich durch nullptr";
-                currentiNode->singleptrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            break;
-        //
-        case 'c':
-            for(int i = 0; i < 12; i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->simplePtrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            for(int i = 0; i < blocksNeeded-12; i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->singleptrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            for(int i = 0; i < blocksNeeded-268; i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->doubleptrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            break;
-        //
-        case 'd':
-            for(int i = 0; i < 12; i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->simplePtrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            for(int i = 0; i < blocksNeeded-12; i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->singleptrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            for(int i = 0; i < blocksNeeded-268; i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->doubleptrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            for(int i = 0; i < blocksNeeded-(65536+268); i++) {
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                currentiNode->doubleptrs[i] = rndm;
-                m_disk->getPlate()[rndm] = OCCUPIED;
-            }
-            break;
-        default:
-            qDebug() << "error occured";
-            break;
 
-    };
+    inodefilesystem::m_inodeTable.insert(pair<QString, unsigned int>(currentiNode->fileName, currentiNode->iNumb));
+    m_listOfFiles.append(*currentiNode);
 
-    //inodefilesystem::m_inodeTable.insert(pair<QString, unsigned int>(currentiNode->fileName, currentiNode->iNumb));
-    //inodefilesystem::addToInodeArr(currentiNode, currentiNode->iNumb);
-
-    //qDebug() << "->>>"  << m_inodeArr[currentiNode->iNumb].fileName;
+    qDebug() << m_listOfFiles.at(0).fileName;
 
 };
 
 
 
-unsigned int* locateFile(inodefilesystem::iNode* inode, int blockSize) {
-    unsigned int blocksInUse = ceil((double)inode->fileSize / blockSize);
-    char sizeFlag = inode->sizeFlag;
-    unsigned int *blockArray = new unsigned int[blocksInUse];
-    switch(sizeFlag) {
-        case 'a':
-        break;
-        case 'b':
-        break;
-        case 'c':
-        break;
-        case 'd':
-        break;
-        default:
-        break;
-    };
+vector<int> inodefilesystem::locateFile(QString fileName) {
 
-
-    return blockArray;
+    unsigned int iNumb = m_inodeTable.at(fileName);
+    iNode ph = m_listOfFiles.at(iNumb);
+    vector<int> blocks;
+    int arrSize = sizeof(*ph.simplePtrs)/sizeof(ph.simplePtrs[0]);
+    for(int i = 0; i < arrSize; i++) {
+        blocks.push_back(ph.simplePtrs[i]);
+    }
+    for(int i = 0; i < ph.singleptrs.size(); i++) {
+        blocks.push_back(ph.singleptrs[i]);
+    }
+    for(int i = 0; i < ph.doubleptrs.size(); i++) {
+        blocks.push_back(ph.doubleptrs[i]);
+    }
+    for(int i = 0; i < ph.tripleptrs.size(); i++) {
+        blocks.push_back(ph.tripleptrs[i]);
+    }
+    return blocks;
 }
 void inodefilesystem::deleteFile(QString fileName){
+    //map<QString,unsigned int> m_inodeTable;
+    unsigned int iNumb = m_inodeTable.at(fileName);
+    iNode ph = m_listOfFiles.at(iNumb);
+    char sizeFlag = ph.sizeFlag;
+    vector<int> blocks = locateFile(fileName);
+    for(int i = 0; i < blocks.size(); i++) {
+        m_disk->getPlate()[blocks[i]] = FREE;
+    }
+
+    m_listOfFiles.removeAt(iNumb);
+    std::map<QString, unsigned int>::iterator it;
+    it = m_inodeTable.find(fileName);
+    m_inodeTable.erase(it);
+    qDebug() << "Should have worked out";
 
 }
-
 void inodefilesystem::defrag(){
     cout << "Not implemented yet" << endl;
 }
