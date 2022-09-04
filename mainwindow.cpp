@@ -11,6 +11,7 @@
 #include <math.h>
 #include <QFormLayout>
 #include <QMessageBox>
+#include <QChar>
 
 Disk* disk;
 abstractFilesystem* fs;
@@ -43,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->fileSystemTreeView->setModel(model);
     QModelIndex idx = model->index("FileSystem");
     ui->fileSystemTreeView->setRootIndex(idx);
+    ui->fileSystemTreeView->hideColumn(1);
 
     // set rect icons for legend
     QPixmap pixmapFree(20,20);
@@ -68,8 +70,6 @@ MainWindow::MainWindow(QWidget *parent)
     painterNotInit.setBrush(QBrush(Qt::gray));
     painterNotInit.drawRect(0,0,20,20);
     ui->notInitLegendIconLabel->setPixmap(pixmapNotInit);
-
-
 
 }
 
@@ -340,22 +340,24 @@ void MainWindow::on_deleteSelectionButton_clicked()
 
 void MainWindow::on_fileSystemTreeView_clicked(const QModelIndex &index)
 {
+    QString fileName = model->fileInfo(index).fileName();
+    ui->fileNameInfoLabel->setText(QString("Name: %1").arg(fileName));
+    int fileSize = 0;
     if(fs != nullptr){
         ui->createFileButton->setEnabled(true);
         ui->createDirButton->setEnabled(true);
         ui->deleteSelectionButton->setEnabled(true);
+        fileSize = fs->getFileSize(fileName);
+
     }
-
-    QString fileName = model->fileInfo(index).fileName();
-    ui->fileNameInfoLabel->setText(QString("Name: %1").arg(fileName));
-
-    qint64 fileSize = model->fileInfo(index).size();
 
     ui->sizeInfoLabel->setText(QString("Größe: %1").arg(fileSize));
 
     QString filePath = model->fileInfo(index).filePath();
     filePath ="root" + filePath.split("root")[1];
     ui->pathInfoLabel->setText(QString("Pfad: %1").arg(filePath));
+
+
 }
 
 void MainWindow::on_defragButton_clicked()
