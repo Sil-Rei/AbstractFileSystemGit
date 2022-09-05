@@ -348,7 +348,6 @@ void MainWindow::on_fileSystemTreeView_clicked(const QModelIndex &index)
         ui->createDirButton->setEnabled(true);
         ui->deleteSelectionButton->setEnabled(true);
         fileSize = fs->getFileSize(fileName);
-
     }
 
     ui->sizeInfoLabel->setText(QString("Größe: %1").arg(fileSize));
