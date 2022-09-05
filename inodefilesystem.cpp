@@ -24,7 +24,9 @@ inodefilesystem::iNode* inodefilesystem::createInode(QString author, unsigned in
     placeholderINode->iNumb = m_iNumb++;
     placeholderINode->fileSize = fileSize;
     placeholderINode->ownerUID = ownerUID;
-
+    for(int i = 0; i < 12; i++) {
+        placeholderINode->simplePtrs[i] = 0;
+    }
     return placeholderINode;
 }
 
@@ -142,7 +144,11 @@ vector<int> inodefilesystem::locateFile(QString fileName) {
     int arrSize = *(&ph.simplePtrs + 1) - ph.simplePtrs;
     //int arrSize = sizeof(*ph.simplePtrs)/sizeof(ph.simplePtrs[0]);
     qDebug() << "arrSize:" << arrSize;
+
     for(int i = 0; i < arrSize; i++) {
+        if(ph.simplePtrs[i] == 0) {
+            break;
+        }
         blocks.push_back(ph.simplePtrs[i]);
     }
     for(int i = 0; i < ph.singleptrs.size(); i++) {
@@ -163,17 +169,35 @@ void inodefilesystem::deleteFile(QString fileName){
     char sizeFlag = ph.sizeFlag;
     vector<int> blocks = locateFile(fileName);
     for(int i = 0; i < blocks.size(); i++) {
+       qDebug() << blocks[i];
+    }
+
+    for(int i = 0; i < blocks.size(); i++) {
         m_disk->getPlate()[blocks[i]] = FREE;
     }
 
-    m_listOfFiles.removeAt(iNumb);
+    /*m_listOfFiles.removeAt(iNumb);
     std::map<QString, unsigned int>::iterator it;
     it = m_inodeTable.find(fileName);
-    m_inodeTable.erase(it);
+    m_inodeTable.erase(it);*/
     qDebug() << "Should have worked out";
 
 }
 void inodefilesystem::defrag(){
+    /*for(int i = 0; i < m_disk->getAmountOfBlocks(); i++) {
+        m_listOfFiles[1];
+        if(m_disk->getPlate()) {
+
+        }
+        do {
+            rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
+        } while(m_disk->getPlate()[rndm] != FREE);
+        currentiNode->singleptrs.push_back(rndm);
+        m_disk->getPlate()[rndm] = OCCUPIED;
+    }*/
+    //if element is 1st element of a block leave it and start )
+    //see which file is comes first in storage
+    //move
     cout << "Not implemented yet" << endl;
 }
 
@@ -184,5 +208,10 @@ bool inodefilesystem::checkName(QString fileName){
 
 long inodefilesystem::getFileSize(QString fileName)
 {
-
+    /*long fileSize;
+    unsigned int iNumb = m_inodeTable.at(fileName);
+    iNode ph = m_listOfFiles.at(iNumb);
+    fileSize = ph.fileSize;
+    return fileSize;*/
+    return 10;
 }
