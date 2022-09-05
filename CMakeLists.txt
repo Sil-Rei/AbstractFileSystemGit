@@ -25,6 +25,7 @@ set(PROJECT_SOURCES
         fatfilesystem.h fatfilesystem.cpp
         inodefilesystem.h inodefilesystem.cpp
         abstractfilesystem.h abstractfilesystem.cpp
+        cdrom.h cdrom.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
