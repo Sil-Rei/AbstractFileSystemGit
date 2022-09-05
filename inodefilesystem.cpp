@@ -15,7 +15,6 @@ inodefilesystem::inodefilesystem(Disk* disk)
     m_disk = disk;
     QList<iNode> m_listOfFiles;
     m_iNumb = 0;
-
 }
 
 inodefilesystem::iNode* inodefilesystem::createInode(QString author, unsigned int fileSize, unsigned int ownerUID) {
@@ -34,7 +33,7 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
 
     int rndm;
 
-    inodefilesystem::iNode *currentiNode = createInode("user", 132 , 2);
+    inodefilesystem::iNode *currentiNode = createInode("user", szFile , 2);
     currentiNode->fileName = name;
 
 
@@ -44,7 +43,7 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
     if(blocksNeeded >= m_disk->getFreeDiskSpaceInBlocks()) {
       return;
     };
-    if(blocksNeeded > 0 && blocksNeeded < 12) {
+    if(blocksNeeded > 0 && blocksNeeded <= 12) {
             currentiNode->sizeFlag = 'a';
             for(int i = 0; i < blocksNeeded; i++) {
                 do {
@@ -53,7 +52,8 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
                 currentiNode->simplePtrs[i] = rndm;
                 m_disk->getPlate()[rndm] = OCCUPIED;
             }
-     } else if(blocksNeeded > 12 && blocksNeeded < 268) {
+
+     } else if(blocksNeeded > 12 && blocksNeeded <= 268) {
             currentiNode->sizeFlag = 'b';
             for(int i = 0; i < 12; i++) {
                 do {
@@ -62,14 +62,16 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
                 currentiNode->simplePtrs[i] = rndm;
                 m_disk->getPlate()[rndm] = OCCUPIED;
             }
-            for(int i = 0; i < 256; i++) {
+            for(int i = 0; i < blocksNeeded-12; i++) {
                 do {
                     rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
                 } while(m_disk->getPlate()[rndm] != FREE);
                 currentiNode->singleptrs.push_back(rndm);
                 m_disk->getPlate()[rndm] = OCCUPIED;
             }
-     } else if(blocksNeeded > 268 && blocksNeeded < (65536+268)) {
+
+     } else if(blocksNeeded > 268 && blocksNeeded <= (65536)) {
+            qDebug() << "Reached c";
             currentiNode->sizeFlag = 'c';
             for(int i = 0; i < 12; i++) {
                 do {
@@ -78,14 +80,14 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
                 currentiNode->simplePtrs[i] = rndm;
                 m_disk->getPlate()[rndm] = OCCUPIED;
             }
-            for(int i = 0; i < 256; i++) {
+            for(int i = 0; i < blocksNeeded - 12; i++) {
                 do {
                     rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
                 } while(m_disk->getPlate()[rndm] != FREE);
                 currentiNode->singleptrs.push_back(rndm);
                 m_disk->getPlate()[rndm] = OCCUPIED;
             }
-            for(int i = 0; i < 65636; i++) {
+            for(int i = 0; i < blocksNeeded -12 - currentiNode->singleptrs.size(); i++) {
                 do {
                     rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
                 } while(m_disk->getPlate()[rndm] != FREE);
@@ -208,10 +210,10 @@ bool inodefilesystem::checkName(QString fileName){
 
 long inodefilesystem::getFileSize(QString fileName)
 {
-    /*long fileSize;
-    unsigned int iNumb = m_inodeTable.at(fileName);
-    iNode ph = m_listOfFiles.at(iNumb);
-    fileSize = ph.fileSize;
-    return fileSize;*/
-    return 10;
+    for(int i = 0; i < m_listOfFiles.size(); i++){
+        if(m_listOfFiles.at(i).fileName == fileName){
+            return m_listOfFiles.at(i).fileSize;
+        }
+    }
+    return 0;
 }
