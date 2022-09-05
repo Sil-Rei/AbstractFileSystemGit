@@ -43,6 +43,7 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
     if(blocksNeeded >= m_disk->getFreeDiskSpaceInBlocks()) {
       return;
     };
+    //test
     if(blocksNeeded > 0 && blocksNeeded <= 12) {
             currentiNode->sizeFlag = 'a';
             for(int i = 0; i < blocksNeeded; i++) {
