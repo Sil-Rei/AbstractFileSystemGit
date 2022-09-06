@@ -1,6 +1,7 @@
 #ifndef CDROM_H
 #define CDROM_H
 #include <QString>
+#include <QList>
 
 class CDROM
 {
@@ -14,7 +15,12 @@ public:
     int getAmountOfBlocks() const;
     void pushFileToCd(QString fileName, long fileSize);
     void clear();
+    void burnCD(QString filepath);
 
+    const QList<QString> &getFilesToBeBurned() const;
+
+protected:
+    QList<QString> filesToBeBurned;
 private:
     char* m_arr;
     int m_amountOfBlocks;

@@ -49,6 +49,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->fileSystemTreeView->setModel(model);
     QModelIndex idx = model->index("FileSystem");
+
+    rootPath = model->fileInfo(idx).path() + "/FileSystem/";
     ui->fileSystemTreeView->setRootIndex(idx);
     ui->fileSystemTreeView->hideColumn(1);
 
@@ -465,6 +467,7 @@ void MainWindow::on_insertEjectCDButton_clicked()
         ui->insertEjectCDButton->setText("CD einlegen");
         ui->burnCDButton->setEnabled(false);
         cd->clear();
+        cd->getFilesToBeBurned();
         ui->moveToCDButton->setEnabled(false);
         if(QDir("FileSystem/cd").exists()){
             QDir("FileSystem/cd").removeRecursively();
@@ -488,6 +491,17 @@ void MainWindow::on_moveToCDButton_clicked()
 
     // Get filename of current index
     QString fileName = model->fileInfo(index).fileName();
+
+    //Check if file is already moved to CD
+    if(cd->getFilesToBeBurned().contains(fileName)){
+        QMessageBox box;
+        box.setText("File wurde schon auf CD geschoben.");
+        box.setIcon(QMessageBox::Warning);
+        box.addButton("OK", QMessageBox::AcceptRole);
+        box.exec();
+        return;
+    }
+
     long fileSize = fs->getFileSize(fileName);
 
     // Check if file fits the cd
@@ -502,13 +516,23 @@ void MainWindow::on_moveToCDButton_clicked()
     }
     cd->pushFileToCd(fileName, fileSize);
     emit CDSpaceAltered();
-
-
 }
 
 
 void MainWindow::on_burnCDButton_clicked()
 {
+    if(cd->getFilesToBeBurned().empty()){
+        QMessageBox box;
+        box.setText("CD ist leer.");
+        box.setIcon(QMessageBox::Warning);
+        box.addButton("OK", QMessageBox::AcceptRole);
+        box.exec();
+        return;
+    }
 
+    cd->burnCD(rootPath);
+    ui->burnCDButton->setEnabled(false);
+    ui->moveToCDButton->setEnabled(false);
+    emit CDSpaceAltered();
 }
 
