@@ -9,6 +9,10 @@
 #include <string>
 #include <QList>
 using namespace std;
+/**
+ * The fatfilesystem class is a child class of abstractfilesystem and implements a simulation of the FAT Filesystem used by windows e.g.
+ * @brief The fatFileSystem class implements a simulation of a fat file system
+ */
 class fatFileSystem : public abstractFilesystem{
 public:
 
@@ -39,7 +43,6 @@ public:
     fatFileSystem(Disk* disk);
     Node* createNode(int index);
     void appendNode(struct BsFile* file, int index);
-    void printList(struct BsFile* file);
     BsFat* createBsFat(unsigned int driveSize, unsigned int blockSize);
     int getFreeDiskSpace();
     void showFat();

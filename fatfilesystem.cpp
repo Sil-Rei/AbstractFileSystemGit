@@ -20,6 +20,11 @@ fatFileSystem::fatFileSystem(Disk* disk) {
     m_disk = disk;
 }
 
+/**
+ * @brief fatFileSystem::createNode creates a node and inits it with null
+ * @param index
+ * @return returns a pointer to the new node
+ */
 fatFileSystem::Node * fatFileSystem::createNode(int index){
     Node* node = new Node();
     node->nextNode = nullptr;
@@ -27,7 +32,11 @@ fatFileSystem::Node * fatFileSystem::createNode(int index){
     node->index = index;
     return node;
 }
-
+/**
+ * @brief fatFileSystem::appendNode appends a node or creates a node if its the first node of the doubly linked list
+ * @param file
+ * @param index
+ */
 void fatFileSystem::appendNode(struct BsFile* file, int index){
     // Create new node, if it's the first node let head point to this new node
     Node* newNode = createNode(index);
@@ -36,7 +45,7 @@ void fatFileSystem::appendNode(struct BsFile* file, int index){
         return;
     }
     // If it's not the first node, create a temp node, loop from start of array (head) to last node in list
-    Node* tempNode = new Node();
+    Node* tempNode;
     tempNode = file->head;
     while(tempNode->nextNode != nullptr){
         tempNode = tempNode->nextNode;
@@ -46,16 +55,12 @@ void fatFileSystem::appendNode(struct BsFile* file, int index){
     newNode->lastNode = tempNode;
 }
 
-void fatFileSystem::printList(struct BsFile* file){
-    struct Node* printingNode = file->head;
-    printf("Printing list: ");
-    while(printingNode != nullptr){
-        printf("%d ", printingNode->index);
-        printingNode = printingNode->nextNode;
-    }
-    printf("\n");
-}
-
+/**
+ * @brief fatFileSystem::createBsFat creates a fat table containing blocksizes, drivvesizes etc
+ * @param driveSize the size of the drive
+ * @param blockSize the size of each block
+ * @return returns a pointer to the created fat
+ */
 fatFileSystem::BsFat* fatFileSystem::createBsFat(unsigned int driveSize, unsigned int blockSize){
     BsFat* fat = new BsFat();
     fat->blockSize = blockSize;
@@ -72,7 +77,10 @@ fatFileSystem::BsFat* fatFileSystem::createBsFat(unsigned int driveSize, unsigne
     return fat;
 }
 
-
+/**
+ * @brief fatFileSystem::getFreeDiskSpace counts free blocks on the disk
+ * @return returns the free space counter
+ */
 int fatFileSystem::getFreeDiskSpace(){
     int freeBlocks = 0;
     for(int i = 0; i < pFat->amountOfBlocks; i++){
@@ -83,7 +91,13 @@ int fatFileSystem::getFreeDiskSpace(){
     return freeBlocks;
 }
 
-
+/**
+ * Creates a file on the disk. Checks if the file fits and the size is legal. Creates a node containing a random free index on the disk for each needed block.
+ * @brief fatFileSystem::createFile creates a file on the disk
+ * @param szFile
+ * @param name
+ * @param systemFlag
+ */
 void fatFileSystem::createFile(int szFile, QString name, unsigned char systemFlag){
     if(szFile <= 0){
         fprintf(stderr, "Filesize cant be 0 or negative");
@@ -124,6 +138,11 @@ void fatFileSystem::createFile(int szFile, QString name, unsigned char systemFla
 
 }
 
+/**
+ * Loops through the files nodes
+ * @brief fatFileSystem::deleteFile delets the file with a given name
+ * @param fileName the name of the file
+ */
 void fatFileSystem::deleteFile(QString fileName){
     for(int i = 0; i < pFat->listOfFiles.count(); i++){
         if(pFat->listOfFiles.at(i)->name == fileName){
@@ -145,7 +164,9 @@ void fatFileSystem::deleteFile(QString fileName){
     cout << "No file found named " << fileName.toStdString() << endl;
 
 }
-
+/**
+ * @brief fatFileSystem::showFat prints the underlying array readable for a human
+ */
 void fatFileSystem::showFat(){
     for(int i = 0; i < pFat->amountOfBlocks; i++){
         if(pFat->listOfStati[i] == FREE){
@@ -170,6 +191,13 @@ void fatFileSystem::showFat(){
     printf("|\n");
 }
 
+/**
+ * @brief fatFileSystem::getLargestEmptySpace returns the largest space of free blocks
+ * @param arr the pointer to the array disk
+ * @param size size of the array
+ * @param largestSpaceIndex
+ * @param largestSpace
+ */
 void fatFileSystem::getLargestEmptySpace(unsigned char* arr, unsigned int size, int* largestSpaceIndex, int* largestSpace){
     int currentStreak = 0;
     int largestSpaceLocal = 0;
@@ -195,7 +223,10 @@ void fatFileSystem::getLargestEmptySpace(unsigned char* arr, unsigned int size, 
     *largestSpaceIndex = largestSpaceIndexLocal;
     *largestSpace = largestSpaceLocal;
 }
-
+/**
+ * @brief fatFileSystem::getFragmentation calculates the fragmentation of the disk
+ * @return returns the fragmenation percentage
+ */
 float fatFileSystem::getFragmentation(){
     int freeBlocks = getFreeDiskSpace();
 
@@ -206,7 +237,9 @@ float fatFileSystem::getFragmentation(){
 
     return (((float)freeBlocks - biggestFreeChunk)/(float)freeBlocks)*100;
 }
-
+/**
+ * @brief fatFileSystem::defrag defrags the disk
+ */
 void fatFileSystem::defrag(){
     // Check if enough space for defrag is available
 //    if((double)getFreeDiskSpace()/pFat->amountOfBlocks < 0.1){
@@ -252,7 +285,12 @@ void fatFileSystem::defrag(){
     }
     printf("\n");
 }
-
+/**
+ * Checks if a given name fits the fat convetion for a filename (8.3 - 1-8 letters followed by an optional 1-3 letters extension. No special chars
+ * @brief fatFileSystem::checkName Checks if name fits fat convention
+ * @param fileName
+ * @return returns true or false wether the name fits
+ */
 bool fatFileSystem::checkName(QString fileName){
     if(fileName.contains(".")){
         if(fileName.size() > 12){
@@ -306,7 +344,11 @@ bool fatFileSystem::checkName(QString fileName){
 
     return true;
 }
-
+/**
+ * @brief fatFileSystem::getFileSize returns the filesize for a given filename
+ * @param fileName the file name
+ * @return returns file size
+ */
 long fatFileSystem::getFileSize(QString fileName)
 {
     for(int i = 0; i < pFat->listOfFiles.size(); i++){

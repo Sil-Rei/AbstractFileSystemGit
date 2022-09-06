@@ -2,7 +2,10 @@
 #define CDROM_H
 #include <QString>
 #include <QList>
-
+/**
+ * The CDROM class representing the simulated CD used to store files from the drive
+ * @brief The CDROM class
+ */
 class CDROM
 {
 public:

@@ -88,7 +88,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-// Setzt die Label und callt paintShit
+/**
+ * This function is executed once when the hdd is initialized
+ * @brief MainWindow::updateDiskInformation
+ */
 void MainWindow::updateDiskInformation(){
     ui->sizeInKbLabel->setText(QString("Größe (in kB):               %1").arg(disk->getDiskSize()));
     ui->blockSizeLabel->setText(QString("Blockgröße:                  %1").arg(disk->getBlockSize()));
@@ -100,7 +103,8 @@ void MainWindow::updateDiskInformation(){
 }
 
 /**
- * @brief MainWindow::updateDisk
+ * This function is executed whenever any information about the disk is changed to keep the labels and the graphic up-to-date
+ * @brief MainWindow::updateDisk keeps labels and graphic up-to-date
  */
 void MainWindow::updateDisk(){
     ui->freeBlocksLabel->setText(QString("Freie Blöcke:                 %1").arg(disk->getFreeDiskSpaceInBlocks()));
@@ -110,14 +114,17 @@ void MainWindow::updateDisk(){
 }
 
 /**
- * @brief MainWindow::updateCD
+ * Updates the CD graphic
+ * @brief MainWindow::updateCD Updates the CD graphic
  */
 void MainWindow::updateCD(){
     paintCD();
 }
 
-// click auf button löst eingabefenster aus und weist der disk die größen je nach usereingabe zu legt neue disk an.
-// callt dann diskInformationChanged welche über die connect mit der updateDiskInformation verbunden ist und den stuff aufruft.
+/**
+ * The init function to start the simulation. After inputting the general conditions it sets the filesystem variable to inode or fat
+ * @brief MainWindow::on_reinitializeHDDButton_clicked inits the filesystem and drive
+ */
 void MainWindow::on_reinitializeHDDButton_clicked()
 {
     ui->defragButton->setEnabled(true);
@@ -180,7 +187,8 @@ void MainWindow::on_reinitializeHDDButton_clicked()
 }
 
 /**
- * @brief MainWindow::paintPlate
+ * Paints the blocks to the graphic label using a pixmap
+ * @brief MainWindow::paintPlate paints the colored blocks to label
  */
 void MainWindow::paintPlate(){
     int size = disk->getAmountOfBlocks();
@@ -219,7 +227,7 @@ void MainWindow::paintPlate(){
     ui->plateGraphicInfoLabel->setPixmap(pixmap);
 }
 /**
- * @brief MainWindow::paintCD
+ * @brief MainWindow::paintCD paints the block stati to the pixmap label
  */
 void MainWindow::paintCD(){
     if(!inserted){
@@ -265,7 +273,8 @@ void MainWindow::paintCD(){
 }
 
 /**
- * @brief MainWindow::on_createFileButton_clicked
+ * Creates a file on the simulated array and in the folder used by the explorer view with the inputted sizes
+ * @brief MainWindow::on_createFileButton_clicked creates a file
  */
 void MainWindow::on_createFileButton_clicked()
 {
@@ -344,6 +353,9 @@ void MainWindow::on_createFileButton_clicked()
     }
 }
 
+/**
+ * @brief MainWindow::on_createDirButton_clicked creates a directory on the explorer view
+ */
 void MainWindow::on_createDirButton_clicked()
 {
     QModelIndex index = ui->fileSystemTreeView->currentIndex();
@@ -361,9 +373,9 @@ void MainWindow::on_createDirButton_clicked()
 }
 
 /**
- * @brief removeDir
- * @param dirName
- * @return
+ * @brief removeDir is a function to recursively delete all contents of a folder, most of the code of this function by of the QT Documentation and stackoverflow
+ * @param dirName name of the directory
+ * @return returns if deletion was successful
  */
 bool removeDir(const QString & dirName)
 {
@@ -389,7 +401,7 @@ bool removeDir(const QString & dirName)
 }
 
 /**
- * @brief MainWindow::on_deleteSelectionButton_clicked
+ * @brief MainWindow::on_deleteSelectionButton_clicked checks if wether its a file or a directory and deletes it
  */
 void MainWindow::on_deleteSelectionButton_clicked()
 {
@@ -410,7 +422,7 @@ void MainWindow::on_deleteSelectionButton_clicked()
 }
 
 /**
- * @brief MainWindow::on_fileSystemTreeView_clicked
+ * @brief MainWindow::on_fileSystemTreeView_clicked this function is executed whenever the user clicks on the explorer view and updates buttons and info
  * @param index
  */
 void MainWindow::on_fileSystemTreeView_clicked(const QModelIndex &index)
@@ -439,7 +451,7 @@ void MainWindow::on_fileSystemTreeView_clicked(const QModelIndex &index)
 }
 
 /**
- * @brief MainWindow::on_defragButton_clicked
+ * @brief MainWindow::on_defragButton_clicked defrags the disk
  */
 void MainWindow::on_defragButton_clicked()
 {
@@ -448,7 +460,7 @@ void MainWindow::on_defragButton_clicked()
 }
 
 /**
- * @brief MainWindow::on_insertEjectCDButton_clicked
+ * @brief MainWindow::on_insertEjectCDButton_clicked swaps the state of the cd (inserted/ejected)
  */
 void MainWindow::on_insertEjectCDButton_clicked()
 {
@@ -479,6 +491,9 @@ void MainWindow::on_insertEjectCDButton_clicked()
     emit CDSpaceAltered();
 }
 
+/**
+ * @brief MainWindow::on_moveToCDButton_clicked queues a file to be moved to the cd
+ */
 void MainWindow::on_moveToCDButton_clicked()
 {
 
@@ -518,7 +533,9 @@ void MainWindow::on_moveToCDButton_clicked()
     emit CDSpaceAltered();
 }
 
-
+/**
+ * @brief MainWindow::on_burnCDButton_clicked burns the queued files to the cd
+ */
 void MainWindow::on_burnCDButton_clicked()
 {
     if(cd->getFilesToBeBurned().empty()){

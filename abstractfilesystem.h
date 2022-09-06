@@ -1,7 +1,11 @@
 #ifndef ABSTRACTFILESYSTEM_H
 #define ABSTRACTFILESYSTEM_H
 #include <QString>
-
+/**
+ * The abstract class of all sub filesystem classes. Defines the outer scope of functions needed
+ * for a filesystem
+ * @brief The abstractFilesystem class parent class of all filesystems
+ */
 class abstractFilesystem
 {
 public:
