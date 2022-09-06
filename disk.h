@@ -3,6 +3,12 @@
 
 #include <QObject>
 using namespace std;
+/**
+ * The Disk class, represents the disk used by a filesystem. It has a char array where
+ * each entry represents a block on the simulated harddrive.
+ * @brief The Disk class, represents the disk used by a filesystem.
+ *
+ */
 class Disk{
 public:
     Disk(int diskSize, int blockSize);
@@ -15,8 +21,6 @@ public:
     void setDiskSize(int newDiskSize);
 
     void setBlockSize(int newBlockSize);
-
-    void setAmountOfBlocks(int newAmountOfBlocks);
 
     int getFreeDiskSpaceInBlocks();
 
