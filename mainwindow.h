@@ -18,6 +18,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     CDROM* cd;
+    QString rootPath;
     ~MainWindow();
 
 private slots:
