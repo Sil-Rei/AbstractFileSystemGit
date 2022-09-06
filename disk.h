@@ -24,6 +24,7 @@ public:
 
     float getFragmentation();
 
+
 private:
     char* m_arr;
     int m_diskSize;
