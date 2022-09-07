@@ -45,7 +45,6 @@ inodefilesystem::iNode* inodefilesystem::createInode(QString author, unsigned in
  * @param systemFlag
  */
 void inodefilesystem::createFile(int szFile, QString name, unsigned char systemFlag){
-
     int rndm;
 
     inodefilesystem::iNode *currentiNode = createInode("user", szFile , 2);
@@ -157,30 +156,34 @@ void inodefilesystem::createFile(int szFile, QString name, unsigned char systemF
  * @param fileName
  * @return vector<int> stores the positions of the file on m_disk
  */
-
 vector<int> inodefilesystem::locateFile(QString fileName) {
 
-    unsigned int iNumb = m_inodeTable.at(fileName);
-    iNode ph = m_listOfFiles.at(iNumb);
+//    unsigned int iNumb = m_inodeTable.at(fileName);
+//    iNode ph = m_listOfFiles.at(iNumb);
+    iNode node;
+    for(int i = 0; i < m_listOfFiles.count(); i++){
+        if(m_listOfFiles[i].fileName == fileName){
+            node = m_listOfFiles[i];
+        }
+    }
     vector<int> blocks;
-    int arrSize = *(&ph.simplePtrs + 1) - ph.simplePtrs;
-    //int arrSize = sizeof(*ph.simplePtrs)/sizeof(ph.simplePtrs[0]);
-    qDebug() << "arrSize:" << arrSize;
 
-    for(int i = 0; i < arrSize; i++) {
-        if(ph.simplePtrs[i] == -1) {
+    //int arrSize = sizeof(*ph.simplePtrs)/sizeof(ph.simplePtrs[0]);
+
+    for(int i = 0; i < 12; i++) {
+        if(node.simplePtrs[i] == -1) {
             break;
         }
-        blocks.push_back(ph.simplePtrs[i]);
+        blocks.push_back(node.simplePtrs[i]);
     }
-    for(int i = 0; i < ph.singleptrs.size(); i++) {
-        blocks.push_back(ph.singleptrs[i]);
+    for(int i = 0; i < node.singleptrs.size(); i++) {
+        blocks.push_back(node.singleptrs[i]);
     }
-    for(int i = 0; i < ph.doubleptrs.size(); i++) {
-        blocks.push_back(ph.doubleptrs[i]);
+    for(int i = 0; i < node.doubleptrs.size(); i++) {
+        blocks.push_back(node.doubleptrs[i]);
     }
-    for(int i = 0; i < ph.tripleptrs.size(); i++) {
-        blocks.push_back(ph.tripleptrs[i]);
+    for(int i = 0; i < node.tripleptrs.size(); i++) {
+        blocks.push_back(node.tripleptrs[i]);
     }
     return blocks;
 }
@@ -189,10 +192,10 @@ vector<int> inodefilesystem::locateFile(QString fileName) {
  * @param fileName
  */
 void inodefilesystem::deleteFile(QString fileName){
-    //map<QString,unsigned int> m_inodeTable;
-    unsigned int iNumb = m_inodeTable.at(fileName);
-    iNode ph = m_listOfFiles.at(iNumb);
-    char sizeFlag = ph.sizeFlag;
+//    map<QString,unsigned int> m_inodeTable;
+//    unsigned int iNumb = m_inodeTable.at(fileName);
+//    iNode ph = m_listOfFiles.at(iNumb);
+//    char sizeFlag = ph.sizeFlag;
     vector<int> blocks = locateFile(fileName);
     for(int i = 0; i < blocks.size(); i++) {
        qDebug() << blocks[i];
@@ -220,108 +223,105 @@ void inodefilesystem::deleteFile(QString fileName){
 // ptrType = 1 inside simplePtrs
 // ptrType = 2 inside simplePtrs
 // ptrType = 3 inside simplePtrs
-void inodefilesystem::findPos(iNode *inodeContainer, int i,  int *ptrType, int *positionOfMember) {
-    int plateLocation = i;
-    for(iNode x: m_listOfFiles) {
-        bool found = false;
-            for(int y = 0; y < 12; y++) {
-                if(x.simplePtrs[i] == 0) {
-                    break;
-                } else {
-                    if(found) {
-                        break;
-                    } else {
-                       if(x.simplePtrs[y] == i) {
-                           *inodeContainer = x;
-                           *positionOfMember = y;
-                           *ptrType = 0;
-                           found = true;
-                       }
-                    }
-                }
-            }
-            for(int z = 0; z < x.singleptrs.size(); z++) {
-                if(found) {
-                    break;
-                } else {
-                   if(x.simplePtrs[z] == i) {
-                       *inodeContainer = x;
-                       *positionOfMember = z;
-                       *ptrType = 1;
-                       found = true;
-                   }
-            }
+void inodefilesystem::findPos(int* indexOfCorrectInodeInAllFiles, int i,  int *ptrType, int *positionOfMember) {
+    for(int idx = 0; idx < m_listOfFiles.size(); idx++) {
+        for(int y = 0; y < 12; y++) {
+            if(m_listOfFiles[idx].simplePtrs[y] == -1) {
+                break;
+            } else {
+               if(m_listOfFiles[idx].simplePtrs[y] == i) {
+                   *indexOfCorrectInodeInAllFiles = idx;
+                   *positionOfMember = y;
+                   *ptrType = 0;
+                   return;
+               }
 
             }
-            for(int a = 0; a < x.doubleptrs.size(); a++) {
-                if(found) {
-                    break;
-                } else {
-                   if(x.simplePtrs[a] == i) {
-                       *inodeContainer = x;
-                       *positionOfMember = a;
-                       *ptrType = 2;
-                       found = true;
-                   }
+        }
+
+        for(int z = 0; z < m_listOfFiles[idx].singleptrs.size(); z++) {
+           if(m_listOfFiles[idx].singleptrs[z] == i) {
+               *indexOfCorrectInodeInAllFiles = idx;
+               *positionOfMember = z;
+               *ptrType = 1;
+               return;
+           }
+        }
+
+        for(int a = 0; a < m_listOfFiles[idx].doubleptrs.size(); a++) {
+           if(m_listOfFiles[idx].doubleptrs[a] == i) {
+               *indexOfCorrectInodeInAllFiles = idx;
+               *positionOfMember = a;
+               *ptrType = 2;
+               return;
+            }
+        }
+
+        for(int b = 0; b < m_listOfFiles[idx].tripleptrs.size(); b++) {
+           if(m_listOfFiles[idx].tripleptrs[b] == i) {
+               *indexOfCorrectInodeInAllFiles = idx;
+               *positionOfMember = b;
+               *ptrType = 3;
+               return;
             }
 
-            }
-            for(int b = 0; b < x.tripleptrs.size(); b++) {
-                if(found) {
-                    break;
-                } else {
-                   if(x.tripleptrs[b] == i) {
-                       *inodeContainer = x;
-                       *positionOfMember = b;
-                       *ptrType = 3;
-                       found = true;
-                   }
-            }
+        }
 
-            }
-
-}
+    }
 }
 
-void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int index) {
+void inodefilesystem::relocateBlock(int* indexOfCorrectInodeInAllFiles, int ptrType, int index) {
+    qDebug() << "reloc reached";
     int rndm;
     do {
         rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
     } while(m_disk->getPlate()[rndm] != FREE);
+    qDebug() << "while finished";
     if(ptrType == 0) {
-        inodeContainer->simplePtrs[index] = rndm;
+        m_listOfFiles[*indexOfCorrectInodeInAllFiles].simplePtrs[index] = rndm;
     } else if(ptrType == 1) {
-        inodeContainer->singleptrs[index] = rndm;
+        qDebug() << "singleptrs accessed";
+        qDebug() << m_listOfFiles[*indexOfCorrectInodeInAllFiles].singleptrs[index];
+        m_listOfFiles[*indexOfCorrectInodeInAllFiles].singleptrs[index] = rndm;
+        qDebug() << "singleptrs finished";
     } else if(ptrType == 2) {
-        inodeContainer->doubleptrs[index] = rndm;
+        qDebug() << "doubleptrs accessed";
+        m_listOfFiles[*indexOfCorrectInodeInAllFiles].doubleptrs[index] = rndm;
     } else if(ptrType == 3) {
-        inodeContainer->tripleptrs[index] = rndm;
+        m_listOfFiles[*indexOfCorrectInodeInAllFiles].tripleptrs[index] = rndm;
     }
     m_disk->getPlate()[rndm] = OCCUPIED;
+    qDebug() << "reloc finished";
 
 }
 void inodefilesystem::partialDefrag(vector<int>* indirectPtrs, int* globix ) {
-    for(int i = 0; i < indirectPtrs->size(); i++){
+    qDebug() << *globix << "REACHED";
 
+    for(int i = 0; i < indirectPtrs->size(); i++){
+        qDebug() << "Round: " << i;
         if(indirectPtrs->at(i) == *globix){
-            globix++;
+            (*globix)++;
             continue;
         }else{
             // check if block is free on disk
             if(m_disk->getPlate()[*globix] == FREE){
+                qDebug() << "pointertype: FREE";
                 m_disk->getPlate()[*globix] = OCCUPIED;
                 m_disk->getPlate()[indirectPtrs->at(i)] = FREE;
                 indirectPtrs->at(i) = (*globix)++;
+
             }else{
                 // block is not free
                 // Gather data of the block im weg
-                iNode inodeContainer;
+                int* indexOfCorrectInodeInAllFiles;
                 int positionOfMember;
                 int ptrType;
-                findPos(&inodeContainer, *globix, &ptrType, &positionOfMember);
+                findPos(indexOfCorrectInodeInAllFiles, *globix, &ptrType, &positionOfMember);
                 // realloc the block in se weg
-                relocateBlock(&inodeContainer, ptrType, positionOfMember);
+                qDebug() << "pointertype: " << ptrType;
+                relocateBlock(indexOfCorrectInodeInAllFiles, ptrType, positionOfMember);
                 indirectPtrs->at(i) = (*globix)++;
+
             }
         }
     }
@@ -331,56 +331,57 @@ void inodefilesystem::partialDefrag(vector<int>* indirectPtrs, int* globix ) {
  * @brief inodefilesystem::defrag defragments m_disk due to looping through the entire simplePtrs and indirectPtrs to find the fitting positions
  *
  */
-
 void inodefilesystem::defrag(){
     int globalIndex = 2;
     for(int numberOfFile = 0; numberOfFile < m_listOfFiles.size(); numberOfFile++){
 
-                unsigned int* simplePtrs = m_listOfFiles[numberOfFile].simplePtrs;
-                // Loop through simple ptrs
-                for(int i = 0; i < 12; i++){
-                    if(simplePtrs[i] == -1){
-                        break;   // file is finished
-                    }
-                    if(simplePtrs[i] == globalIndex){
-                        globalIndex++;
-                        continue;
-                    }else{
-                        // check if block is free on disk
-                        if(m_disk->getPlate()[globalIndex] == FREE){
-                            m_disk->getPlate()[globalIndex] = OCCUPIED;
-                            m_disk->getPlate()[simplePtrs[i]] = FREE;
-                            simplePtrs[i] = globalIndex++;
-                        }else{
-                            // block is not free
-                            // Gather data of the block im weg
-                            iNode inodeContainer;
-                            int positionOfMember;
-                            int ptrType;
-                            findPos(&inodeContainer, globalIndex, &ptrType, &positionOfMember);
+        unsigned int* simplePtrs = m_listOfFiles[numberOfFile].simplePtrs;
+        // Loop through simple ptrs
+        for(int i = 0; i < 12; i++){
+            if(simplePtrs[i] == -1){
+                break;   // file is finished
+            }
+            if(simplePtrs[i] == globalIndex){
+                globalIndex++;
+                continue;
+            }else{
+                // check if block is free on disk
+                if(m_disk->getPlate()[globalIndex] == FREE){
+                    m_disk->getPlate()[globalIndex] = OCCUPIED;
+                    m_disk->getPlate()[simplePtrs[i]] = FREE;
+                    simplePtrs[i] = globalIndex++;
+                }else{
+                    // block is not free
+                    // Gather data of the block im weg
+                    int* indexOfCorrectInodeInAllFiles;
+                    int positionOfMember;
+                    int ptrType;
+                    findPos(indexOfCorrectInodeInAllFiles, globalIndex, &ptrType, &positionOfMember);
 
-                            // realloc the block in se weg
-                            relocateBlock(&inodeContainer, ptrType, positionOfMember);
+                    // realloc the block in se weg
+                    relocateBlock(indexOfCorrectInodeInAllFiles, ptrType, positionOfMember);
 
-                            simplePtrs[i] = globalIndex++;
-                        }
-                    }
+                    simplePtrs[i] = globalIndex++;
+                }
+            }
 
-                }
-                if(m_listOfFiles[numberOfFile].sizeFlag == 'b') {
-                    partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
-                }
-                if(m_listOfFiles[numberOfFile].sizeFlag == 'c') {
-                    partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
-                    partialDefrag(&m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
-                }
-                if(m_listOfFiles[numberOfFile].sizeFlag == 'd') {
-                    partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
-                    partialDefrag(&m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
-                    partialDefrag(&m_listOfFiles[numberOfFile].tripleptrs, &globalIndex);
-                }
+        }
+        if(m_listOfFiles[numberOfFile].sizeFlag == 'b') {
+
+            partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+        }
+        if(m_listOfFiles[numberOfFile].sizeFlag == 'c') {
+            partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+            partialDefrag(&m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
+        }
+        if(m_listOfFiles[numberOfFile].sizeFlag == 'd') {
+            partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+            partialDefrag(&m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
+            partialDefrag(&m_listOfFiles[numberOfFile].tripleptrs, &globalIndex);
+        }
     }
 }
+
 /**
  * @brief inodefilesystem::checkName checks if the fileName fulfills the restrictions
  * @param fileName
@@ -388,7 +389,7 @@ void inodefilesystem::defrag(){
  */
 bool inodefilesystem::checkName(QString fileName){
     //All bytes except NUL ('\0') and '/' according to wikipedia
-    if(fileName.contains("\0") || fileName.contains("/")){
+    if(fileName.contains("\\0") || fileName.contains("/")){
             QMessageBox box;
             box.setText("Filename darf kein \\0 oder / enthalten.");
             box.setIcon(QMessageBox::Warning);
@@ -406,7 +407,6 @@ bool inodefilesystem::checkName(QString fileName){
             return false;
         }
     }
-    //All bytes except NUL ('\0') and '/'
     }
     return true;
 }
@@ -420,6 +420,7 @@ long inodefilesystem::getFileSize(QString fileName)
     for(int i = 0; i < m_listOfFiles.size(); i++){
         if(m_listOfFiles.at(i).fileName == fileName){
             return m_listOfFiles.at(i).fileSize;
-        }}
+        }
+    }
     return 0;
 }
