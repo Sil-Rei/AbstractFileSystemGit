@@ -29,11 +29,11 @@ public:
       iNode* referediNode;
 
     };
-
+    void partialDefrag(vector<int> indirectPtrs, int* globix );
     iNode* createInode(QString author, unsigned int fileSize, unsigned int ownerUID);
 
     vector<int> locateFile(QString name);
-    void relocateBlock(iNode* inodeContainer, int ptrType, int index, int newLocation);
+    void relocateBlock(iNode* inodeContainer, int ptrType, int index);
 
     inodefilesystem(Disk* disk);
     void findPos(iNode *inodeContainer, int i, int *ptrType, int *positionOfMember);
@@ -52,4 +52,3 @@ private:
 };
 
 #endif // INODEFILESYSTEM_H
-

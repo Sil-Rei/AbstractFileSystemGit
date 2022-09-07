@@ -299,6 +299,33 @@ void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int inde
     m_disk->getPlate()[rndm] = OCCUPIED;
 
 }
+void inodefilesystem::partialDefrag(vector<int> indirectPtrs, int* globix ) {
+    for(int i = 0; i < indirectPtrs.size(); i++){
+
+        if(indirectPtrs[i] == *globix){
+            globix++;
+            continue;
+        }else{
+            // check if block is free on disk
+            if(m_disk->getPlate()[*globix] == FREE){
+                m_disk->getPlate()[*globix] = OCCUPIED;
+                m_disk->getPlate()[indirectPtrs[i]] = FREE;
+                indirectPtrs[i] = (*globix)++;
+            }else{
+                // block is not free
+                // Gather data of the block im weg
+                iNode inodeContainer;
+                int positionOfMember;
+                int ptrType;
+                findPos(&inodeContainer, *globix, &ptrType, &positionOfMember);
+                // realloc the block in se weg
+                relocateBlock(&inodeContainer, ptrType, positionOfMember);
+                indirectPtrs[i] = (*globix)++;
+            }
+        }
+    }
+}
+
 /**
  * @brief inodefilesystem::defrag defragments m_disk due to looping through the entire simplePtrs and indirectPtrs to find the fitting positions
  *
@@ -307,38 +334,50 @@ void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int inde
 void inodefilesystem::defrag(){
     int globalIndex = 2;
     for(int numberOfFile = 0; numberOfFile < m_listOfFiles.size(); numberOfFile++){
-        unsigned int* simplePtrs = m_listOfFiles[numberOfFile].simplePtrs;
-        // Loop through simple ptrs
-        for(int i = 0; i < 12; i++){
-            if(simplePtrs[i] == -1){
-                break;   // file is finished
-            }
-            if(simplePtrs[i] == globalIndex){
-                globalIndex++;
-                continue;
-            }else{
-                // check if block is free on disk
-                if(m_disk->getPlate()[globalIndex] == FREE){
-                    m_disk->getPlate()[globalIndex] = OCCUPIED;
-                    m_disk->getPlate()[simplePtrs[i]] = FREE;
-                    simplePtrs[i] = globalIndex++;
-                }else{
-                    // block is not free
-                    // Gather data of the block im weg
-                    iNode inodeContainer;
-                    int positionOfMember;
-                    int ptrType;
-                    findPos(&inodeContainer, globalIndex, &ptrType, &positionOfMember);
 
-                    // realloc the block in se weg
-                    relocateBlock(&inodeContainer, ptrType, positionOfMember);
+                unsigned int* simplePtrs = m_listOfFiles[numberOfFile].simplePtrs;
+                // Loop through simple ptrs
+                for(int i = 0; i < 12; i++){
+                    if(simplePtrs[i] == -1){
+                        break;   // file is finished
+                    }
+                    if(simplePtrs[i] == globalIndex){
+                        globalIndex++;
+                        continue;
+                    }else{
+                        // check if block is free on disk
+                        if(m_disk->getPlate()[globalIndex] == FREE){
+                            m_disk->getPlate()[globalIndex] = OCCUPIED;
+                            m_disk->getPlate()[simplePtrs[i]] = FREE;
+                            simplePtrs[i] = globalIndex++;
+                        }else{
+                            // block is not free
+                            // Gather data of the block im weg
+                            iNode inodeContainer;
+                            int positionOfMember;
+                            int ptrType;
+                            findPos(&inodeContainer, globalIndex, &ptrType, &positionOfMember);
 
-                    simplePtrs[i] = globalIndex++;
+                            // realloc the block in se weg
+                            relocateBlock(&inodeContainer, ptrType, positionOfMember);
+
+                            simplePtrs[i] = globalIndex++;
+                        }
+                    }
 
                 }
-            }
-
-        }
+                if(m_listOfFiles[numberOfFile].sizeFlag == 'b') {
+                    partialDefrag(m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+                }
+                if(m_listOfFiles[numberOfFile].sizeFlag == 'c') {
+                    partialDefrag(m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+                    partialDefrag(m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
+                }
+                if(m_listOfFiles[numberOfFile].sizeFlag == 'd') {
+                    partialDefrag(m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+                    partialDefrag(m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
+                    partialDefrag(m_listOfFiles[numberOfFile].tripleptrs, &globalIndex);
+                }
     }
 }
 
