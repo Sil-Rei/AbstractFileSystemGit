@@ -201,11 +201,18 @@ void inodefilesystem::deleteFile(QString fileName){
         m_disk->getPlate()[blocks[i]] = FREE;
     }
 
-    m_listOfFiles.removeAt(iNumb);/*
-    std::map<QString, unsigned int>::iterator it;
-    it = m_inodeTable.find(fileName);
-    m_inodeTable.erase(it);*/
-    qDebug() << "Should have worked out";
+    // get the correct inode
+    for(int i = 0; i < m_listOfFiles.count(); i++){
+        if(m_listOfFiles[i].fileName == fileName){
+            m_listOfFiles.removeAt(i);
+            break;
+        }
+    }
+
+//    std::map<QString, unsigned int>::iterator it;
+//    it = m_inodeTable.find(fileName);
+//    m_inodeTable.erase(it);
+//    qDebug() << "Should have worked out";
 
 }
 // ptrType = 0 inside simplePtrs
@@ -275,21 +282,22 @@ void inodefilesystem::findPos(iNode *inodeContainer, int i,  int *ptrType, int *
 }
 }
 
-void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int index, int newLocation) {
+void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int index) {
     int rndm;
     do {
         rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
     } while(m_disk->getPlate()[rndm] != FREE);
     if(ptrType == 0) {
-        inodeContainer->simplePtrs[index] = newLocation;
+        inodeContainer->simplePtrs[index] = rndm;
     } else if(ptrType == 1) {
-        inodeContainer->singleptrs[index] = newLocation;
+        inodeContainer->singleptrs[index] = rndm;
     } else if(ptrType == 2) {
-        inodeContainer->doubleptrs[index] = newLocation;
+        inodeContainer->doubleptrs[index] = rndm;
     } else if(ptrType == 3) {
-        inodeContainer->tripleptrs[index] = newLocation;
+        inodeContainer->tripleptrs[index] = rndm;
     }
     m_disk->getPlate()[rndm] = OCCUPIED;
+
 }
 /**
  * @brief inodefilesystem::defrag defragments m_disk due to looping through the entire simplePtrs and indirectPtrs to find the fitting positions
@@ -297,94 +305,43 @@ void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int inde
  */
 
 void inodefilesystem::defrag(){
-    int rndm;
-    int globalIndex;
-    for(int i = 0; i < m_listOfFiles.size(); i++) {
-        int fileSizeInBlocks = ceil((double)m_listOfFiles[i].fileSize  / m_disk->getBlockSize());
+    int globalIndex = 2;
+    for(int numberOfFile = 0; numberOfFile < m_listOfFiles.size(); numberOfFile++){
+        unsigned int* simplePtrs = m_listOfFiles[numberOfFile].simplePtrs;
+        // Loop through simple ptrs
+        for(int i = 0; i < 12; i++){
+            if(simplePtrs[i] == -1){
+                break;   // file is finished
+            }
+            if(simplePtrs[i] == globalIndex){
+                globalIndex++;
+                continue;
+            }else{
+                // check if block is free on disk
+                if(m_disk->getPlate()[globalIndex] == FREE){
+                    m_disk->getPlate()[globalIndex] = OCCUPIED;
+                    m_disk->getPlate()[simplePtrs[i]] = FREE;
+                    simplePtrs[i] = globalIndex++;
+                }else{
+                    // block is not free
+                    // Gather data of the block im weg
+                    iNode inodeContainer;
+                    int positionOfMember;
+                    int ptrType;
+                    findPos(&inodeContainer, globalIndex, &ptrType, &positionOfMember);
 
-        for(int y )
+                    // realloc the block in se weg
+                    relocateBlock(&inodeContainer, ptrType, positionOfMember);
+
+                    simplePtrs[i] = globalIndex++;
+
+                }
+            }
+
+        }
     }
-    for(int i = 0; i < m_disk->getAmountOfBlocks(); i++) {
-        iNode inodeContainer;
-        int positionOfMember;
-        int next;
-        int ptrType;
-
-        if(m_disk->getPlate()[i]  == OCCUPIED) {
-            //if Block is OCCUPIED find inode it belongs to
-            findPos(&inodeContainer, m_disk->getPlate()[i], &ptrType, &positionOfMember);
-            next = i+1;
-            if(ptrType == 0) {
-                if(next == inodeContainer.simplePtrs[positionOfMember+1]) {
-                   continue;
-                } else {
-                    int fileSizeInBlocks = ceil((double)inodeContainer.fileSize / m_disk->getBlockSize());
-                    //loop
-                    for(int q = 0; q < fileSizeInBlocks; q++) {
-
-                    }
-                    iNode dBlockInode;
-                    int pos;
-                    int type;
-
-                    //locate the disturbing block
-                    findPos(&dBlockInode, next, &type, &pos);
-
-                    //relocate file
-                    relocateBlock(&dBlockInode, type, pos, rndm);
-
-
-
-                    //FREE the block which is about to get moved
-                    m_disk->getPlate()[next] = FREE;
-                    inodeContainer.simplePtrs[positionOfMember] = next;
-                }
-            } else if(ptrType == 1) {
-                if(m_disk->getPlate()[next] == FREE ||  next == inodeContainer.singleptrs[positionOfMember+1]) {
-                   break;
-                } else {
-                    iNode dBlockInode;
-                    int pos;
-                    int type;
-                    //FREE the block which is about to get moved
-                    m_disk->getPlate()[next] = FREE;
-                    inodeContainer.singleptrs[next] = next;
-                    //locate the disturbing block
-                    findPos(&inodeContainer, next, &ptrType, &positionOfMember);
-                    do {
-                        rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                    } while(m_disk->getPlate()[rndm] != FREE);
-                    //relocate file
-                    inodeContainer.singleptrs[positionOfMember] = rndm;
-                    m_disk->getPlate()[rndm] = OCCUPIED;
-                }
-            } else if(ptrType == 2) {
-                if(m_disk->getPlate()[next] == FREE ||  next == inodeContainer.doubleptrs[positionOfMember+1]) {
-                   break;
-                }
-            } else if(ptrType == 3) {
-                if(m_disk->getPlate()[next] == FREE ||  next == inodeContainer.doubleptrs[positionOfMember+1]) {
-                   break;
-                }
-            }
-            qDebug() << "file is in pos: " << positionOfMember << " was found in ptrType:" << ptrType;
-            // while the following block on the disk is not already the second item of the file or is not already FREE
-            if(m_disk->getPlate()[i+1] == FREE ||  i+1 == inodeContainer.simplePtrs[positionOfMember+1]) {
-              break;
-            } else {
-                int ph = i+1;
-                do {
-                    rndm = rand() % (m_disk->getAmountOfBlocks() + 1);
-                } while(m_disk->getPlate()[rndm] != FREE);
-                //locate the disturbing block
-                findPos(&inodeContainer, m_disk->getPlate()[i], &ptrType, &positionOfMember);
-                m_disk->getPlate()[rndm] = OCCUPIED;
-                // set next plateBlock to inodes next addressed block
-                m_disk->getPlate()[i+1] = inodeContainer.simplePtrs[i+1];
-            }
 }
-}
-}
+
 /**
  * @brief inodefilesystem::checkName checks if the fileName fulfills the restrictions
  * @param fileName
