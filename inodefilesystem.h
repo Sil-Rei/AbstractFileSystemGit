@@ -29,7 +29,7 @@ public:
       iNode* referediNode;
 
     };
-    void partialDefrag(vector<int> indirectPtrs, int* globix );
+    void partialDefrag(vector<int> *indirectPtrs, int* globix );
     iNode* createInode(QString author, unsigned int fileSize, unsigned int ownerUID);
 
     vector<int> locateFile(QString name);

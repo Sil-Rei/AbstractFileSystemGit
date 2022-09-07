@@ -5,6 +5,7 @@
 #include "statusTypes.h"
 #include "disk.h"
 #include <QDebug>
+#include <QMessageBox>
 //p
 using namespace std;
 
@@ -299,18 +300,18 @@ void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int inde
     m_disk->getPlate()[rndm] = OCCUPIED;
 
 }
-void inodefilesystem::partialDefrag(vector<int> indirectPtrs, int* globix ) {
-    for(int i = 0; i < indirectPtrs.size(); i++){
+void inodefilesystem::partialDefrag(vector<int>* indirectPtrs, int* globix ) {
+    for(int i = 0; i < indirectPtrs->size(); i++){
 
-        if(indirectPtrs[i] == *globix){
+        if(indirectPtrs->at(i) == *globix){
             globix++;
             continue;
         }else{
             // check if block is free on disk
             if(m_disk->getPlate()[*globix] == FREE){
                 m_disk->getPlate()[*globix] = OCCUPIED;
-                m_disk->getPlate()[indirectPtrs[i]] = FREE;
-                indirectPtrs[i] = (*globix)++;
+                m_disk->getPlate()[indirectPtrs->at(i)] = FREE;
+                indirectPtrs->at(i) = (*globix)++;
             }else{
                 // block is not free
                 // Gather data of the block im weg
@@ -320,7 +321,7 @@ void inodefilesystem::partialDefrag(vector<int> indirectPtrs, int* globix ) {
                 findPos(&inodeContainer, *globix, &ptrType, &positionOfMember);
                 // realloc the block in se weg
                 relocateBlock(&inodeContainer, ptrType, positionOfMember);
-                indirectPtrs[i] = (*globix)++;
+                indirectPtrs->at(i) = (*globix)++;
             }
         }
     }
@@ -367,27 +368,46 @@ void inodefilesystem::defrag(){
 
                 }
                 if(m_listOfFiles[numberOfFile].sizeFlag == 'b') {
-                    partialDefrag(m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+                    partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
                 }
                 if(m_listOfFiles[numberOfFile].sizeFlag == 'c') {
-                    partialDefrag(m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
-                    partialDefrag(m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
+                    partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+                    partialDefrag(&m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
                 }
                 if(m_listOfFiles[numberOfFile].sizeFlag == 'd') {
-                    partialDefrag(m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
-                    partialDefrag(m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
-                    partialDefrag(m_listOfFiles[numberOfFile].tripleptrs, &globalIndex);
+                    partialDefrag(&m_listOfFiles[numberOfFile].singleptrs, &globalIndex);
+                    partialDefrag(&m_listOfFiles[numberOfFile].doubleptrs, &globalIndex);
+                    partialDefrag(&m_listOfFiles[numberOfFile].tripleptrs, &globalIndex);
                 }
     }
 }
-
 /**
  * @brief inodefilesystem::checkName checks if the fileName fulfills the restrictions
  * @param fileName
  * @return fileName passes the restrictions
  */
 bool inodefilesystem::checkName(QString fileName){
+    //All bytes except NUL ('\0') and '/' according to wikipedia
+    if(fileName.contains("\0") || fileName.contains("/")){
+            QMessageBox box;
+            box.setText("Filename darf kein \\0 oder / enthalten.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+    // Check if name is already in use
+    for(int i = 0; i < m_listOfFiles.count(); i++){
+        if(m_listOfFiles.at(i).fileName == fileName){
+            QMessageBox box;
+            box.setText("Filename existiert bereits.");
+            box.setIcon(QMessageBox::Warning);
+            box.addButton("OK", QMessageBox::AcceptRole);
+            box.exec();
+            return false;
+        }
+    }
     //All bytes except NUL ('\0') and '/'
+    }
     return true;
 }
 /**
@@ -400,7 +420,6 @@ long inodefilesystem::getFileSize(QString fileName)
     for(int i = 0; i < m_listOfFiles.size(); i++){
         if(m_listOfFiles.at(i).fileName == fileName){
             return m_listOfFiles.at(i).fileSize;
-        }
-    }
+        }}
     return 0;
 }
