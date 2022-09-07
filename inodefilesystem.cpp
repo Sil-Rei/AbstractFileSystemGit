@@ -33,7 +33,7 @@ inodefilesystem::iNode* inodefilesystem::createInode(QString author, unsigned in
     placeholderINode->fileSize = fileSize;
     placeholderINode->ownerUID = ownerUID;
     for(int i = 0; i < 12; i++) {
-        placeholderINode->simplePtrs[i] = 0;
+        placeholderINode->simplePtrs[i] = -1;
     }
     return placeholderINode;
 }
@@ -167,7 +167,7 @@ vector<int> inodefilesystem::locateFile(QString fileName) {
     qDebug() << "arrSize:" << arrSize;
 
     for(int i = 0; i < arrSize; i++) {
-        if(ph.simplePtrs[i] == 0) {
+        if(ph.simplePtrs[i] == -1) {
             break;
         }
         blocks.push_back(ph.simplePtrs[i]);
@@ -201,7 +201,7 @@ void inodefilesystem::deleteFile(QString fileName){
         m_disk->getPlate()[blocks[i]] = FREE;
     }
 
-    /*m_listOfFiles.removeAt(iNumb);
+    m_listOfFiles.removeAt(iNumb);/*
     std::map<QString, unsigned int>::iterator it;
     it = m_inodeTable.find(fileName);
     m_inodeTable.erase(it);*/
@@ -298,7 +298,12 @@ void inodefilesystem::relocateBlock(iNode* inodeContainer, int ptrType, int inde
 
 void inodefilesystem::defrag(){
     int rndm;
+    int globalIndex;
+    for(int i = 0; i < m_listOfFiles.size(); i++) {
+        int fileSizeInBlocks = ceil((double)m_listOfFiles[i].fileSize  / m_disk->getBlockSize());
 
+        for(int y )
+    }
     for(int i = 0; i < m_disk->getAmountOfBlocks(); i++) {
         iNode inodeContainer;
         int positionOfMember;
@@ -310,10 +315,14 @@ void inodefilesystem::defrag(){
             findPos(&inodeContainer, m_disk->getPlate()[i], &ptrType, &positionOfMember);
             next = i+1;
             if(ptrType == 0) {
-                if(m_disk->getPlate()[next] == FREE ||  next == inodeContainer.simplePtrs[positionOfMember+1]) {
-                   break;
+                if(next == inodeContainer.simplePtrs[positionOfMember+1]) {
+                   continue;
                 } else {
                     int fileSizeInBlocks = ceil((double)inodeContainer.fileSize / m_disk->getBlockSize());
+                    //loop
+                    for(int q = 0; q < fileSizeInBlocks; q++) {
+
+                    }
                     iNode dBlockInode;
                     int pos;
                     int type;
