@@ -4,6 +4,7 @@
 #include "abstractfilesystem.h"
 #include "disk.h"
 #include <ctime>
+
 // based on ext2-fileSystem
 class inodefilesystem : public abstractFilesystem
 {
@@ -32,9 +33,10 @@ public:
     iNode* createInode(QString author, unsigned int fileSize, unsigned int ownerUID);
 
     vector<int> locateFile(QString name);
+    void relocateBlock(iNode* inodeContainer, int ptrType, int index, int newLocation);
 
     inodefilesystem(Disk* disk);
-
+    void findPos(iNode *inodeContainer, int i, int *ptrType, int *positionOfMember);
     virtual void createFile(int szFile, QString name, unsigned char systemFlag);
     virtual void deleteFile(QString fileName);
     virtual void defrag();
