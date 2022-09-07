@@ -29,14 +29,14 @@ public:
       iNode* referediNode;
 
     };
-
+    void partialDefrag(vector<int>* indirectPtrs, int* globix );
     iNode* createInode(QString author, unsigned int fileSize, unsigned int ownerUID);
 
     vector<int> locateFile(QString name);
-    void relocateBlock(iNode* inodeContainer, int ptrType, int index);
+    void relocateBlock(int* indexOfCorrectInodeInAllFiles, int ptrType, int index);
 
     inodefilesystem(Disk* disk);
-    void findPos(iNode *inodeContainer, int i, int *ptrType, int *positionOfMember);
+    void findPos(int* indexOfCorrectInodeInAllFiles, int i, int *ptrType, int *positionOfMember);
     virtual void createFile(int szFile, QString name, unsigned char systemFlag);
     virtual void deleteFile(QString fileName);
     virtual void defrag();
